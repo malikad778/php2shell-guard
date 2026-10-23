@@ -1,0 +1,47 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  shell-and-node:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - name: Run POSIX shell tests (sh / dash / bash)
+        run: |
+          sh tests/shell/test_audit_sh.sh
+          bash tests/shell/test_audit_sh.sh
+      - name: Setup Node.js 22
+        uses: actions/setup-node@39370e3970a6d050c480ffad4ff0ed4d3fdee5af # v4.1.0
+        with:
+          node-version: "22.23.4"
+      - name: Verify Advisory DB and Run Node CLI Tests
+        run: |
+          node bin/php2shell-guard.mjs db:verify
+          node --test tests/node/cli.test.mjs
+
+  php-matrix:
+    runs-on: ubuntu-24.04
+    strategy:
+      fail-fast: false
+      matrix:
+        php-version: ["5.4", "7.4", "8.1", "8.2", "8.3", "8.4"]
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - name: Setup PHP ${{ matrix.php-version }}
+        uses: shivammathur/setup-php@9e72090525849c5e82e596468b86eb55e9cc5401 # v2.32.0
+        with:
+          php-version: ${{ matrix.php-version }}
+          coverage: none
+      - name: Syntax check legacy scanner on all PHP versions
+        run: php -l bin/audit-legacy.php
+      - name: Run PHP test suite (PHP 7.4+)
+        if: matrix.php-version != '5.4'
+        run: php tests/run.php

@@ -1,0 +1,208 @@
+{
+  "id": "nodejs-2026-10",
+  "title": "Node.js October 2026 Security Releases (Node2Shell / Brotli OOB Write & High CVEs)",
+  "product": "nodejs",
+  "cves": [
+    "CVE-2026-111497",
+    "CVE-2026-105482",
+    "CVE-2026-106069",
+    "CVE-2026-105483",
+    "CVE-2026-105481",
+    "CVE-2026-106072",
+    "CVE-2026-106074",
+    "CVE-2026-106070",
+    "CVE-2026-106071",
+    "CVE-2026-106073"
+  ],
+  "cve_details": {
+    "CVE-2026-111497": {
+      "summary": "Brotli decoder out-of-bounds write leading to potential remote code execution (High). Affects bundled Brotli and shared system Brotli older than upstream commit 0ed4268.",
+      "cvss": 8.8,
+      "severity": "high",
+      "affected_branches": [
+        "26",
+        "25",
+        "24",
+        "23",
+        "22",
+        "20",
+        "18"
+      ],
+      "fixed_in": [
+        "26.12.1",
+        "24.22.1",
+        "22.23.4"
+      ]
+    },
+    "CVE-2026-105482": {
+      "summary": "dns.resolve NUL byte truncation vulnerability (High).",
+      "cvss": 7.5,
+      "severity": "high",
+      "affected_branches": [
+        "26",
+        "25",
+        "24",
+        "23",
+        "22",
+        "20",
+        "18"
+      ],
+      "fixed_in": [
+        "26.12.1",
+        "24.22.1",
+        "22.23.4"
+      ]
+    },
+    "CVE-2026-106069": {
+      "summary": "TLS hostname verification bypass via non-canonical IP address strings (High).",
+      "cvss": 7.7,
+      "severity": "high",
+      "affected_branches": [
+        "26",
+        "25",
+        "24",
+        "23",
+        "22",
+        "20",
+        "18"
+      ],
+      "fixed_in": [
+        "26.12.1",
+        "24.22.1",
+        "22.23.4"
+      ]
+    },
+    "CVE-2026-105483": {
+      "summary": "TLS hostname verification bypass via fullwidth digits on Node 24.x and 26.x (High).",
+      "cvss": 7.5,
+      "severity": "high",
+      "affected_branches": [
+        "26",
+        "24"
+      ],
+      "fixed_in": [
+        "26.12.1",
+        "24.22.1"
+      ]
+    }
+  },
+  "severity": {
+    "cvss_v4": 8.8,
+    "label": "high"
+  },
+  "published": "2026-10-21",
+  "affected": {
+    "sapis": [
+      "node",
+      "server",
+      "worker"
+    ],
+    "notes": "10 CVEs fixed in October 2026 security release (4 rated High, 3 Medium, 3 Low). EOL lines 18, 20, 23, and 25 receive no official fixes."
+  },
+  "branches": [
+    {
+      "branch": "26",
+      "fixed": "26.12.1",
+      "eol": false
+    },
+    {
+      "branch": "25",
+      "fixed": null,
+      "eol": true,
+      "notes": "Node 25 is EOL and receives no fix."
+    },
+    {
+      "branch": "24",
+      "fixed": "24.22.1",
+      "eol": false
+    },
+    {
+      "branch": "23",
+      "fixed": null,
+      "eol": true,
+      "notes": "Node 23 is EOL and receives no fix."
+    },
+    {
+      "branch": "22",
+      "fixed": "22.23.4",
+      "eol": false
+    },
+    {
+      "branch": "20",
+      "fixed": null,
+      "eol": true,
+      "notes": "Node 20 is EOL and receives no fix."
+    },
+    {
+      "branch": "18",
+      "fixed": null,
+      "eol": true,
+      "notes": "Node 18 is EOL and receives no fix."
+    },
+    {
+      "branch": "older",
+      "fixed": null,
+      "eol": true,
+      "notes": "All older Node.js releases are EOL and affected."
+    }
+  ],
+  "mitigations": [
+    {
+      "id": "N1",
+      "title": "Upgrade Node.js to 22.23.4, 24.22.1, or 26.12.1 and rebuild containers",
+      "covers": [
+        "CVE-2026-111497",
+        "CVE-2026-105482",
+        "CVE-2026-106069",
+        "CVE-2026-105483"
+      ],
+      "confidence": "official",
+      "weak": false,
+      "source": "https://nodejs.org/en/blog/vulnerability",
+      "notes": "The recommended complete remediation for all 10 October 2026 Node.js CVEs."
+    },
+    {
+      "id": "N2",
+      "title": "Update system Brotli library for shared-Brotli Node builds",
+      "covers": [
+        "CVE-2026-111497"
+      ],
+      "confidence": "vendor-reported",
+      "weak": false,
+      "source": "https://github.com/google/brotli/commit/0ed4268",
+      "notes": "Applies when Node.js is compiled with shared system Brotli (--shared-brotli). Ensure libbrotli includes upstream fix 0ed4268."
+    },
+    {
+      "id": "N3",
+      "title": "Last resort: reject inbound Content-Encoding: br request bodies at reverse proxy",
+      "covers": [
+        "CVE-2026-111497"
+      ],
+      "confidence": "reasoning-based",
+      "weak": true,
+      "source": "https://nodejs.org/en/blog/vulnerability",
+      "notes": "Last resort only. Covers inbound request bodies only; does not protect outbound HTTP client responses decoded by your app."
+    },
+    {
+      "id": "N4",
+      "title": "Last resort: omit br from outbound HTTP client Accept-Encoding headers",
+      "covers": [
+        "CVE-2026-111497"
+      ],
+      "confidence": "reasoning-based",
+      "weak": true,
+      "source": "https://nodejs.org/en/blog/vulnerability",
+      "notes": "Last resort, weak control. Only affects cooperative upstreams; a hostile upstream can still return Content-Encoding: br."
+    }
+  ],
+  "sources": [
+    "https://nodejs.org/en/blog/vulnerability",
+    "https://github.com/google/brotli/commit/0ed4268"
+  ],
+  "exploitation": {
+    "reported": false,
+    "kev": false,
+    "last_checked": "2026-10-23"
+  },
+  "last_verified": "2026-10-23"
+}

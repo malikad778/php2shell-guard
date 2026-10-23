@@ -1,0 +1,10 @@
+# Set default behavior to automatically normalize line endings
+* text=auto
+
+# Enforce LF on all shell scripts and CLI entrypoints to avoid \r syntax errors on Unix
+*.sh text eol=lf
+bin/audit.sh text eol=lf
+bin/php2shell-guard text eol=lf
+bin/php2shell-guard.mjs text eol=lf
+bin/php2shell-guard.js text eol=lf
+bin/audit-legacy.php text eol=lf

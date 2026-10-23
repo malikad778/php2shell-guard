@@ -1,0 +1,41 @@
+{
+  "product": "nodejs",
+  "last_verified": "2026-10-23",
+  "branches": {
+    "26": {
+      "released": "2026-04-21",
+      "security_support_until": "2029-04-30",
+      "eol": false
+    },
+    "25": {
+      "released": "2025-10-21",
+      "security_support_until": "2026-06-01",
+      "eol": true
+    },
+    "24": {
+      "released": "2025-04-22",
+      "security_support_until": "2028-04-30",
+      "eol": false
+    },
+    "23": {
+      "released": "2024-10-16",
+      "security_support_until": "2025-06-01",
+      "eol": true
+    },
+    "22": {
+      "released": "2024-04-24",
+      "security_support_until": "2027-04-30",
+      "eol": false
+    },
+    "20": {
+      "released": "2023-04-18",
+      "security_support_until": "2026-04-30",
+      "eol": true
+    },
+    "18": {
+      "released": "2022-04-18",
+      "security_support_until": "2025-04-30",
+      "eol": true
+    }
+  }
+}

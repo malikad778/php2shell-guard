@@ -1,0 +1,9 @@
+# php2shell-guard gitignore
+.php2shell-guard/
+*.bak
+tmp_*
+node_modules/
+vendor/
+.DS_Store
+Thumbs.db
+plan.md

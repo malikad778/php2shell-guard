@@ -1,0 +1,12 @@
+# php2shell-guard generated mitigation snippet (Target: compose)
+# Covers: CVE-2026-109618 (M3 cgroup memory boundary), CVE-2026-109619
+# Confidence: Official (M3 container memory limit companion to memory_limit=-1)
+# IMPORTANT: Reduces exposure only. This does not replace patching.
+# Never set ulimits.as or ulimits.data (RLIMIT_AS / RLIMIT_DATA), as those trigger in-process allocation failures.
+
+services:
+  app:
+    image: php:8.3.36-fpm-alpine
+    mem_limit: 512m
+    memswap_limit: 512m
+    pids_limit: 128

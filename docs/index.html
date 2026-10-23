@@ -1,0 +1,1442 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>php2shell-guard Deployment Guide | Enterprise Security Auditor for PHP and Node.js</title>
+  <meta name="description" content="Production deployment guide and interactive vulnerability scanner for php2shell-guard. Audit PHP2Shell (CVE-2026-109618, CVE-2026-109619) and Node.js Brotli RCE across bare-metal, Docker, Kubernetes, and CI/CD.">
+  <meta name="keywords" content="php2shell, php2shell-guard, CVE-2026-109618, CVE-2026-109619, CVE-2026-111497, PHP vulnerability scanner, Node.js security auditor, devsecops, zero-day mitigation">
+  <meta name="author" content="Malik Adnan">
+  <meta name="robots" content="index, follow">
+
+  <!-- Open Graph / Facebook -->
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://github.com/malikad778/php2shell-guard">
+  <meta property="og:title" content="php2shell-guard Deployment Guide: Audit and Remediate Critical PHP and Node.js Vulnerabilities">
+  <meta property="og:description" content="Zero-dependency, read-only security auditor for PHP2Shell and Node.js security advisories with automated rollback and dynamic vulnerability feeds.">
+
+  <!-- Twitter Cards -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="php2shell-guard Deployment Guide">
+  <meta name="twitter:description" content="Zero-dependency, read-only security auditor for PHP2Shell and Node.js security advisories with automated rollback and dynamic vulnerability feeds.">
+
+  <!-- Structured Data JSON-LD -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "SoftwareApplication",
+    "name": "php2shell-guard",
+    "operatingSystem": "Linux, macOS, Windows",
+    "applicationCategory": "SecurityApplication",
+    "offers": {
+      "@type": "Offer",
+      "price": "0",
+      "priceCurrency": "USD"
+    },
+    "description": "Read-only defensive auditor (no exploit code or PoC, zero dependencies) for PHP2Shell CVE-2026-109618, CVE-2026-109619, and Node.js CVE-2026-111497.",
+    "author": {
+      "@type": "Person",
+      "name": "Malik Adnan",
+      "url": "https://github.com/malikad778"
+    }
+  }
+  </script>
+
+  <!-- Schema.org FAQPage for Direct LLM / RAG Answer Extraction -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": [
+      {
+        "@type": "Question",
+        "name": "How to check if a server is vulnerable to PHP2Shell (CVE-2026-109618 & CVE-2026-109619)?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Run the zero-dependency read-only command: curl -fsSLO https://raw.githubusercontent.com/malikad778/php2shell-guard/main/bin/audit.sh && sh audit.sh scan. The tool inspects running PHP-FPM, Apache mod_php, LiteSpeed lsphp, and FrankenPHP workers against patched releases (8.2.35, 8.3.36, 8.4.27, 8.5.12) and distro backports."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "How to detect PHP2Shell exploitation in logs (Unknown on line 0 and AH00052)?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Run: sh audit.sh scan --logs. The scanner checks /var/log, PHP ini error_log, and Apache logs for memory exhaustion patterns (Allowed memory size exhausted in Unknown on line 0), Apache child segmentation faults (AH00052), and worker processes spawning interactive shells."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "How to check if PHP-FPM workers were restarted after patching?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Run: php php2shell-guard.phar scan or sh audit.sh scan. The auditor checks /proc/<pid>/exe for deleted binary handles and compares worker start times against on-disk binary timestamps, reporting PATCHED_NOT_RESTARTED if active workers still execute old code in memory."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "How to mitigate CVE-2026-109618 on EOL PHP 7.4, 8.0, and 8.1?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Run: php php2shell-guard.phar apply --target=php-ini --yes. This sets memory_limit = -1 administratively via php_admin_value to neutralize the allocation failure condition in upload progress handlers, with automatic syntax pre-validation and rollback."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "How to audit Node.js Brotli decoder RCE (CVE-2026-111497)?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Run: npx php2shell-guard node:scan. The auditor verifies Node.js versions against fixed releases (22.23.4, 24.22.1, 26.12.1) and scans dependencies for Brotli decompression usage."
+        }
+      }
+    ]
+  }
+  </script>
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+  <style>
+    :root {
+      --bg-dark: #0a0f1d;
+      --bg-card: #111827;
+      --bg-card-hover: #1f2937;
+      --border-color: rgba(255, 255, 255, 0.08);
+      --border-accent: rgba(6, 182, 212, 0.4);
+      --primary-cyan: #06b6d4;
+      --primary-emerald: #10b981;
+      --primary-indigo: #6366f1;
+      --accent-rose: #f43f5e;
+      --accent-amber: #f59e0b;
+      --text-main: #f3f4f6;
+      --text-muted: #9ca3af;
+      --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      --font-mono: 'JetBrains Mono', monospace;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background-color: var(--bg-dark);
+      color: var(--text-main);
+      font-family: var(--font-sans);
+      line-height: 1.6;
+      overflow-x: hidden;
+      min-height: 100vh;
+    }
+
+    /* Ambient Background Glow */
+    .glow-orb {
+      position: fixed;
+      border-radius: 50%;
+      filter: blur(120px);
+      pointer-events: none;
+      z-index: 0;
+      opacity: 0.18;
+    }
+    .orb-1 {
+      top: -100px;
+      left: 15%;
+      width: 500px;
+      height: 500px;
+      background: var(--primary-cyan);
+    }
+    .orb-2 {
+      top: 30%;
+      right: 10%;
+      width: 450px;
+      height: 450px;
+      background: var(--primary-indigo);
+    }
+    .orb-3 {
+      bottom: 10%;
+      left: 20%;
+      width: 400px;
+      height: 400px;
+      background: var(--primary-emerald);
+    }
+
+    /* Container & Layout */
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 24px;
+      position: relative;
+      z-index: 1;
+    }
+
+    /* Navigation */
+    header.site-header {
+      border-bottom: 1px solid var(--border-color);
+      backdrop-filter: blur(16px);
+      background: rgba(10, 15, 29, 0.85);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
+    .nav-inner {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      height: 72px;
+    }
+
+    .logo-badge {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-weight: 700;
+      font-size: 1.25rem;
+      color: #fff;
+      text-decoration: none;
+    }
+
+    .logo-icon {
+      width: 36px;
+      height: 36px;
+      background: linear-gradient(135deg, var(--primary-cyan), var(--primary-indigo));
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 0 20px rgba(6, 182, 212, 0.4);
+    }
+
+    .version-tag {
+      font-size: 0.75rem;
+      padding: 3px 8px;
+      border-radius: 9999px;
+      background: rgba(16, 185, 129, 0.15);
+      color: var(--primary-emerald);
+      border: 1px solid rgba(16, 185, 129, 0.3);
+      font-family: var(--font-mono);
+      font-weight: 600;
+    }
+
+    .nav-links {
+      display: flex;
+      gap: 24px;
+      align-items: center;
+    }
+
+    .nav-links a {
+      color: var(--text-muted);
+      text-decoration: none;
+      font-size: 0.95rem;
+      font-weight: 500;
+      transition: color 0.2s;
+    }
+
+    .nav-links a:hover {
+      color: var(--primary-cyan);
+    }
+
+    .btn-github {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 16px;
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      color: #fff;
+      font-weight: 600;
+      font-size: 0.9rem;
+      text-decoration: none;
+      transition: all 0.2s;
+    }
+
+    .btn-github:hover {
+      background: rgba(255, 255, 255, 0.12);
+      border-color: var(--primary-cyan);
+    }
+
+    /* Hero Section */
+    .hero {
+      padding: 80px 0 60px;
+      text-align: center;
+    }
+
+    .hero-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 14px;
+      border-radius: 9999px;
+      background: rgba(6, 182, 212, 0.1);
+      border: 1px solid rgba(6, 182, 212, 0.25);
+      color: var(--primary-cyan);
+      font-size: 0.85rem;
+      font-weight: 600;
+      margin-bottom: 24px;
+      letter-spacing: 0.02em;
+    }
+
+    h1.hero-title {
+      font-size: clamp(2.2rem, 5vw, 3.8rem);
+      font-weight: 800;
+      line-height: 1.15;
+      letter-spacing: -0.03em;
+      margin-bottom: 20px;
+      background: linear-gradient(180deg, #ffffff 30%, #94a3b8 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    p.hero-subtitle {
+      max-width: 800px;
+      margin: 0 auto 36px;
+      font-size: 1.15rem;
+      color: var(--text-muted);
+      font-weight: 400;
+    }
+
+    .hero-actions {
+      display: flex;
+      justify-content: center;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+
+    .btn-primary {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: linear-gradient(135deg, var(--primary-cyan), var(--primary-indigo));
+      color: #fff;
+      font-weight: 600;
+      padding: 12px 28px;
+      border-radius: 10px;
+      text-decoration: none;
+      box-shadow: 0 4px 20px rgba(6, 182, 212, 0.35);
+      transition: transform 0.15s, box-shadow 0.15s;
+    }
+
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 25px rgba(6, 182, 212, 0.5);
+    }
+
+    .btn-secondary {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--bg-card);
+      color: #fff;
+      font-weight: 600;
+      padding: 12px 24px;
+      border-radius: 10px;
+      text-decoration: none;
+      border: 1px solid var(--border-color);
+      transition: all 0.15s;
+    }
+
+    .btn-secondary:hover {
+      border-color: var(--primary-cyan);
+      background: var(--bg-card-hover);
+    }
+
+    /* Stats Grid */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 20px;
+      margin: 50px 0 80px;
+    }
+
+    .stat-card {
+      background: rgba(17, 24, 39, 0.7);
+      backdrop-filter: blur(12px);
+      border: 1px solid var(--border-color);
+      border-radius: 14px;
+      padding: 24px;
+      transition: border-color 0.2s;
+    }
+
+    .stat-card:hover {
+      border-color: var(--border-accent);
+    }
+
+    .stat-number {
+      font-size: 2rem;
+      font-weight: 700;
+      font-family: var(--font-mono);
+      color: #fff;
+      margin-bottom: 6px;
+    }
+
+    .stat-number.cyan { color: var(--primary-cyan); }
+    .stat-number.emerald { color: var(--primary-emerald); }
+    .stat-number.indigo { color: var(--primary-indigo); }
+    .stat-number.rose { color: var(--accent-rose); }
+
+    .stat-label {
+      color: var(--text-muted);
+      font-size: 0.9rem;
+      font-weight: 500;
+    }
+
+    /* Section Headers */
+    .section-header {
+      margin-bottom: 32px;
+    }
+
+    .section-title {
+      font-size: 1.85rem;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      margin-bottom: 8px;
+    }
+
+    .section-desc {
+      color: var(--text-muted);
+      font-size: 1.05rem;
+    }
+
+    /* Deployment Wizard */
+    .wizard-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 16px;
+      overflow: hidden;
+      margin-bottom: 80px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+    }
+
+    .tabs-header {
+      display: flex;
+      overflow-x: auto;
+      background: rgba(15, 23, 42, 0.7);
+      border-bottom: 1px solid var(--border-color);
+      padding: 6px;
+      gap: 6px;
+    }
+
+    .tab-btn {
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      padding: 10px 18px;
+      border-radius: 8px;
+      font-family: var(--font-sans);
+      font-size: 0.9rem;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      white-space: nowrap;
+      transition: all 0.2s;
+    }
+
+    .tab-btn:hover {
+      color: #fff;
+      background: rgba(255, 255, 255, 0.05);
+    }
+
+    .tab-btn.active {
+      color: #fff;
+      background: rgba(6, 182, 212, 0.15);
+      border: 1px solid rgba(6, 182, 212, 0.3);
+    }
+
+    .tab-content {
+      padding: 28px;
+      display: none;
+    }
+
+    .tab-content.active {
+      display: block;
+    }
+
+    .command-box {
+      background: #060913;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 10px;
+      padding: 18px;
+      font-family: var(--font-mono);
+      font-size: 0.95rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin: 16px 0;
+      gap: 16px;
+    }
+
+    .command-text {
+      color: #38bdf8;
+      word-break: break-all;
+      white-space: pre-wrap;
+    }
+
+    .btn-copy {
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid var(--border-color);
+      color: #fff;
+      padding: 6px 12px;
+      border-radius: 6px;
+      font-size: 0.8rem;
+      font-family: var(--font-sans);
+      font-weight: 600;
+      cursor: pointer;
+      flex-shrink: 0;
+      transition: all 0.15s;
+    }
+
+    .btn-copy:hover {
+      background: var(--primary-cyan);
+      color: #000;
+    }
+
+    .instruction-steps {
+      list-style: none;
+      margin-top: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .instruction-steps li {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      color: var(--text-muted);
+      font-size: 0.95rem;
+    }
+
+    .step-num {
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      background: rgba(6, 182, 212, 0.2);
+      color: var(--primary-cyan);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.75rem;
+      font-weight: 700;
+      flex-shrink: 0;
+      margin-top: 2px;
+    }
+
+    /* Interactive Vulnerability Calculator */
+    .calculator-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 16px;
+      padding: 32px;
+      margin-bottom: 80px;
+    }
+
+    .calc-controls {
+      display: grid;
+      grid-template-columns: 1fr 1fr auto;
+      gap: 16px;
+      align-items: end;
+      margin-bottom: 24px;
+    }
+
+    @media (max-width: 768px) {
+      .calc-controls {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .form-group label {
+      display: block;
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      margin-bottom: 8px;
+    }
+
+    .form-control {
+      width: 100%;
+      background: #060913;
+      border: 1px solid var(--border-color);
+      color: #fff;
+      padding: 10px 14px;
+      border-radius: 8px;
+      font-family: var(--font-mono);
+      font-size: 0.95rem;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+
+    .form-control:focus {
+      border-color: var(--primary-cyan);
+    }
+
+    .btn-calc {
+      background: var(--primary-cyan);
+      color: #000;
+      font-weight: 700;
+      padding: 11px 24px;
+      border-radius: 8px;
+      border: none;
+      cursor: pointer;
+      font-size: 0.95rem;
+      transition: all 0.2s;
+    }
+
+    .btn-calc:hover {
+      background: #22d3ee;
+      transform: translateY(-1px);
+    }
+
+    .calc-result {
+      background: #060913;
+      border: 1px solid var(--border-color);
+      border-radius: 10px;
+      padding: 20px;
+      display: none;
+    }
+
+    .calc-result.active {
+      display: block;
+      animation: fadeIn 0.3s ease-out;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(6px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .result-badge {
+      display: inline-block;
+      padding: 4px 10px;
+      border-radius: 6px;
+      font-family: var(--font-mono);
+      font-weight: 700;
+      font-size: 0.85rem;
+      margin-bottom: 12px;
+    }
+
+    .badge-vulnerable {
+      background: rgba(244, 63, 94, 0.15);
+      color: var(--accent-rose);
+      border: 1px solid rgba(244, 63, 94, 0.3);
+    }
+
+    .badge-patched {
+      background: rgba(16, 185, 129, 0.15);
+      color: var(--primary-emerald);
+      border: 1px solid rgba(16, 185, 129, 0.3);
+    }
+
+    .badge-eol {
+      background: rgba(245, 158, 11, 0.15);
+      color: var(--accent-amber);
+      border: 1px solid rgba(245, 158, 11, 0.3);
+    }
+
+    /* Feature Grid */
+    .feature-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+      gap: 24px;
+      margin-bottom: 80px;
+    }
+
+    .feature-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 14px;
+      padding: 28px;
+      transition: all 0.2s;
+    }
+
+    .feature-card:hover {
+      border-color: var(--border-accent);
+      transform: translateY(-2px);
+    }
+
+    .feature-icon {
+      width: 44px;
+      height: 44px;
+      border-radius: 10px;
+      background: rgba(6, 182, 212, 0.12);
+      color: var(--primary-cyan);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.25rem;
+      margin-bottom: 18px;
+    }
+
+    .feature-title {
+      font-size: 1.2rem;
+      font-weight: 700;
+      margin-bottom: 10px;
+      color: #fff;
+    }
+
+    .feature-desc {
+      color: var(--text-muted);
+      font-size: 0.95rem;
+      line-height: 1.6;
+    }
+
+    /* Footer */
+    footer.site-footer {
+      border-top: 1px solid var(--border-color);
+      padding: 48px 0;
+      color: var(--text-muted);
+      font-size: 0.9rem;
+      text-align: center;
+      background: rgba(10, 15, 29, 0.95);
+    }
+
+    .footer-links {
+      display: flex;
+      justify-content: center;
+      gap: 20px;
+      margin-bottom: 16px;
+      flex-wrap: wrap;
+    }
+
+    .footer-links a {
+      color: var(--text-muted);
+      text-decoration: none;
+      transition: color 0.2s;
+    }
+
+    .footer-links a:hover {
+      color: var(--primary-cyan);
+    }
+
+    /* Releases Section */
+    .releases-section {
+      margin-bottom: 80px;
+    }
+    .release-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 16px;
+      padding: 32px;
+    }
+    .release-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 24px;
+      padding-bottom: 16px;
+      border-bottom: 1px solid var(--border-color);
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+    .release-tag {
+      background: rgba(16, 185, 129, 0.15);
+      color: var(--primary-emerald);
+      border: 1px solid rgba(16, 185, 129, 0.3);
+      padding: 4px 12px;
+      border-radius: 9999px;
+      font-weight: 700;
+      font-size: 0.9rem;
+      font-family: var(--font-mono);
+    }
+    .release-date {
+      color: var(--text-muted);
+      font-size: 0.85rem;
+      margin-left: 12px;
+    }
+    .btn-release-gh {
+      color: var(--primary-cyan);
+      text-decoration: none;
+      font-size: 0.9rem;
+      font-weight: 600;
+    }
+    .btn-release-gh:hover {
+      text-decoration: underline;
+    }
+    .asset-grid {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      margin-bottom: 28px;
+    }
+    .asset-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: #060913;
+      border: 1px solid var(--border-color);
+      border-radius: 10px;
+      padding: 16px 20px;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+    .asset-name {
+      display: block;
+      font-family: var(--font-mono);
+      font-weight: 700;
+      color: #fff;
+      font-size: 1rem;
+      margin-bottom: 4px;
+    }
+    .asset-desc {
+      color: var(--text-muted);
+      font-size: 0.85rem;
+    }
+    .btn-download {
+      background: rgba(6, 182, 212, 0.15);
+      color: var(--primary-cyan);
+      border: 1px solid rgba(6, 182, 212, 0.3);
+      padding: 8px 18px;
+      border-radius: 8px;
+      text-decoration: none;
+      font-size: 0.85rem;
+      font-weight: 600;
+      transition: all 0.2s;
+    }
+    .btn-download:hover {
+      background: var(--primary-cyan);
+      color: #000;
+    }
+    .checksum-box {
+      background: #060913;
+      border: 1px solid var(--border-color);
+      border-radius: 10px;
+      padding: 16px;
+    }
+    .checksum-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+      color: var(--text-muted);
+      font-size: 0.85rem;
+      font-weight: 600;
+    }
+    .checksum-code {
+      font-family: var(--font-mono);
+      font-size: 0.8rem;
+      color: #a5f3fc;
+      line-height: 1.6;
+      overflow-x: auto;
+      white-space: pre-wrap;
+    }
+
+    /* Tags Section */
+    .tags-section {
+      margin-bottom: 60px;
+    }
+    .tags-container {
+      background: rgba(15, 23, 42, 0.6);
+      border: 1px solid var(--border-color);
+      border-radius: 14px;
+      padding: 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+    .tags-label {
+      font-size: 0.9rem;
+      font-weight: 700;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+    .tags-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+    .tag-pill {
+      background: rgba(99, 102, 241, 0.12);
+      border: 1px solid rgba(99, 102, 241, 0.25);
+      color: #a5b4fc;
+      padding: 5px 12px;
+      border-radius: 9999px;
+      font-family: var(--font-mono);
+      font-size: 0.85rem;
+      text-decoration: none;
+      transition: all 0.2s;
+    }
+    .tag-pill:hover {
+      background: rgba(6, 182, 212, 0.2);
+      border-color: var(--primary-cyan);
+      color: #fff;
+      transform: translateY(-1px);
+    }
+
+    /* About Maintainer Section */
+    .about-section {
+      margin-bottom: 80px;
+    }
+    .about-card {
+      background: linear-gradient(135deg, rgba(15, 23, 42, 0.95), rgba(10, 15, 29, 0.95));
+      border: 1px solid var(--border-color);
+      border-radius: 16px;
+      padding: 36px;
+    }
+    .author-badge {
+      display: flex;
+      align-items: center;
+      gap: 18px;
+      margin-bottom: 20px;
+    }
+    .author-avatar {
+      width: 60px;
+      height: 60px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--primary-cyan), var(--primary-indigo));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 800;
+      font-size: 1.4rem;
+      color: #fff;
+      box-shadow: 0 0 25px rgba(6, 182, 212, 0.35);
+      flex-shrink: 0;
+    }
+    .author-name {
+      font-size: 1.4rem;
+      font-weight: 800;
+      color: #fff;
+      margin-bottom: 4px;
+    }
+    .author-role {
+      color: var(--primary-cyan);
+      font-size: 0.95rem;
+      font-weight: 600;
+    }
+    .about-text {
+      color: var(--text-muted);
+      font-size: 1rem;
+      line-height: 1.7;
+      margin-bottom: 24px;
+    }
+    .author-links {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 14px;
+    }
+    .author-link-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--border-color);
+      padding: 9px 18px;
+      border-radius: 8px;
+      color: #fff;
+      font-size: 0.9rem;
+      font-weight: 600;
+      text-decoration: none;
+      transition: all 0.2s;
+    }
+    .author-link-btn:hover {
+      background: rgba(255, 255, 255, 0.12);
+      border-color: var(--primary-cyan);
+      color: var(--primary-cyan);
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Ambient Glow Effects -->
+  <div class="glow-orb orb-1"></div>
+  <div class="glow-orb orb-2"></div>
+  <div class="glow-orb orb-3"></div>
+
+  <!-- Header -->
+  <header class="site-header">
+    <div class="container nav-inner">
+      <a href="#" class="logo-badge" id="nav-brand">
+        <div class="logo-icon">🛡️</div>
+        <span>php2shell-guard</span>
+        <span class="version-tag">v0.3.0</span>
+      </a>
+      <nav class="nav-links">
+        <a href="#quick-start" id="nav-quickstart">Deploy</a>
+        <a href="#calculator" id="nav-calculator">Version Checker</a>
+        <a href="#features" id="nav-features">Architecture</a>
+        <a href="#releases" id="nav-releases">Releases</a>
+        <a href="#about" id="nav-about">About</a>
+        <a href="https://github.com/malikad778/php2shell-guard" target="_blank" rel="noopener" class="btn-github" id="nav-gh">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/></svg>
+          GitHub
+        </a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="container">
+    <!-- Hero Section -->
+    <section class="hero">
+      <div class="hero-badge">⚡ Critical Security Defense: PHP2Shell and Node.js Zero-Days</div>
+      <h1 class="hero-title">Deploy Read-Only Security Auditing Across Your Entire Infrastructure</h1>
+      <p class="hero-subtitle">
+        Zero dependencies. Read-only by design. Detects unauthenticated remote code execution vulnerabilities in PHP-FPM, Apache mod_php, FrankenPHP, and Node.js with safe configuration rollback.
+      </p>
+      <div class="hero-actions">
+        <a href="#quick-start" class="btn-primary" id="hero-btn-deploy">Quick Deployment</a>
+        <a href="#calculator" class="btn-secondary" id="hero-btn-check">Check Your Version</a>
+      </div>
+    </section>
+
+    <!-- Stats Matrix -->
+    <section class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-number cyan">0</div>
+        <div class="stat-label">External Runtime Dependencies Required</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-number emerald">&lt; 60s</div>
+        <div class="stat-label">Full Infrastructure Scan Time</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-number rose">9.2</div>
+        <div class="stat-label">CVSS Critical Severity Coverage</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-number indigo">100%</div>
+        <div class="stat-label">Automated Pre-Validation Rollback</div>
+      </div>
+    </section>
+
+    <!-- Quick Start Wizard -->
+    <section class="section-header" id="quick-start">
+      <h2 class="section-title">Deployment Wizard and Command Generator</h2>
+      <p class="section-desc">Select your target operating environment for instant, copy-paste ready deployment instructions.</p>
+    </section>
+
+    <div class="wizard-card">
+      <div class="tabs-header" role="tablist">
+        <button class="tab-btn active" data-tab="tab-sh" id="tab-btn-sh">POSIX Shell (Zero-Dep)</button>
+        <button class="tab-btn" data-tab="tab-php" id="tab-btn-php">PHP CLI / PHAR</button>
+        <button class="tab-btn" data-tab="tab-composer" id="tab-btn-composer">Composer / Laravel</button>
+        <button class="tab-btn" data-tab="tab-node" id="tab-btn-node">Node.js / npm</button>
+        <button class="tab-btn" data-tab="tab-docker" id="tab-btn-docker">Docker Fleets</button>
+        <button class="tab-btn" data-tab="tab-k8s" id="tab-btn-k8s">Kubernetes</button>
+      </div>
+
+      <!-- Tab: POSIX Shell -->
+      <div class="tab-content active" id="tab-sh">
+        <p style="color: var(--text-muted); margin-bottom: 8px;">Run directly on any bare-metal Linux or macOS server. Works without PHP or Node installed:</p>
+        <div class="command-box">
+          <code class="command-text" id="cmd-sh">curl -fsSLO https://raw.githubusercontent.com/malikad778/php2shell-guard/main/bin/audit.sh && sh audit.sh scan</code>
+          <button class="btn-copy" onclick="copyCode('cmd-sh', this)">Copy</button>
+        </div>
+        <ul class="instruction-steps">
+          <li><span class="step-num">1</span>Downloads standalone POSIX-compliant audit script with SHA256 integrity verification.</li>
+          <li><span class="step-num">2</span>Audits PHP web SAPIs (FPM, Apache mod_php, FrankenPHP) and Node.js runtimes.</li>
+          <li><span class="step-num">3</span>Discovers log compromise indicators (IOC1-IOC7) without generating false positives on clean systems.</li>
+        </ul>
+      </div>
+
+      <!-- Tab: PHP CLI -->
+      <div class="tab-content" id="tab-php">
+        <p style="color: var(--text-muted); margin-bottom: 8px;">Run via standalone compiled PHAR archive or PHP script runner:</p>
+        <div class="command-box">
+          <code class="command-text" id="cmd-phar">php -r "copy('https://raw.githubusercontent.com/malikad778/php2shell-guard/main/php2shell-guard.phar', 'php2shell-guard.phar');" && php php2shell-guard.phar scan --format=table</code>
+          <button class="btn-copy" onclick="copyCode('cmd-phar', this)">Copy</button>
+        </div>
+        <ul class="instruction-steps">
+          <li><span class="step-num">1</span>Compatible with PHP 7.4 through PHP 8.5+.</li>
+          <li><span class="step-num">2</span>Execute client-ready HTML reports: <code>php php2shell-guard.phar scan --format=html --output=audit-report.html</code></li>
+          <li><span class="step-num">3</span>Check advisory database freshness: <code>php php2shell-guard.phar db:verify</code></li>
+        </ul>
+      </div>
+
+      <!-- Tab: Composer / Laravel -->
+      <div class="tab-content" id="tab-composer">
+        <p style="color: var(--text-muted); margin-bottom: 8px;">Integrate into Laravel, Symfony, or modern PHP projects:</p>
+        <div class="command-box">
+          <code class="command-text" id="cmd-composer">composer require --dev malikad/php2shell-guard && php artisan php2shell:audit</code>
+          <button class="btn-copy" onclick="copyCode('cmd-composer', this)">Copy</button>
+        </div>
+        <ul class="instruction-steps">
+          <li><span class="step-num">1</span>Automatically registers Artisan command in Laravel applications.</li>
+          <li><span class="step-num">2</span>Integrates with Spatie Health checks for continuous production monitoring.</li>
+          <li><span class="step-num">3</span>Plan safe PHP upgrades: <code>php vendor/bin/php2shell-guard upgrade:plan --to=8.4</code></li>
+        </ul>
+      </div>
+
+      <!-- Tab: Node.js -->
+      <div class="tab-content" id="tab-node">
+        <p style="color: var(--text-muted); margin-bottom: 8px;">Instant execution via npx or npm global installation:</p>
+        <div class="command-box">
+          <code class="command-text" id="cmd-node">npx php2shell-guard scan --format=markdown</code>
+          <button class="btn-copy" onclick="copyCode('cmd-node', this)">Copy</button>
+        </div>
+        <ul class="instruction-steps">
+          <li><span class="step-num">1</span>Scans Node.js Brotli decoder exposure (CVE-2026-111497) and PHP backend runtimes.</li>
+          <li><span class="step-num">2</span>Inspects shared vs bundled Brotli libraries: <code>node bin/php2shell-guard.mjs node:scan</code></li>
+        </ul>
+      </div>
+
+      <!-- Tab: Docker -->
+      <div class="tab-content" id="tab-docker">
+        <p style="color: var(--text-muted); margin-bottom: 8px;">Audit running Docker containers, images, and Coolify deployments:</p>
+        <div class="command-box">
+          <code class="command-text" id="cmd-docker">sh audit.sh scan --docker</code>
+          <button class="btn-copy" onclick="copyCode('cmd-docker', this)">Copy</button>
+        </div>
+        <ul class="instruction-steps">
+          <li><span class="step-num">1</span>Inspects all active containers running PHP-FPM, Apache, or Node.js.</li>
+          <li><span class="step-num">2</span>Detects containers executing old unpatched base images despite updated tag labels.</li>
+        </ul>
+      </div>
+
+      <!-- Tab: Kubernetes -->
+      <div class="tab-content" id="tab-k8s">
+        <p style="color: var(--text-muted); margin-bottom: 8px;">Audit entire Kubernetes cluster pod workloads via kubectl:</p>
+        <div class="command-box">
+          <code class="command-text" id="cmd-k8s">php php2shell-guard.phar scan --k8s</code>
+          <button class="btn-copy" onclick="copyCode('cmd-k8s', this)">Copy</button>
+        </div>
+        <ul class="instruction-steps">
+          <li><span class="step-num">1</span>Enumerates all pods across namespaces inspecting container image tags.</li>
+          <li><span class="step-num">2</span>Exports results to SARIF 2.1.0 for automated GitLab or GitHub Code Scanning ingestion.</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- Interactive Vulnerability Calculator -->
+    <section class="section-header" id="calculator">
+      <h2 class="section-title">Interactive Vulnerability Evaluation Engine</h2>
+      <p class="section-desc">Test your runtime version against active security advisories in real time.</p>
+    </section>
+
+    <div class="calculator-card">
+      <div class="calc-controls">
+        <div class="form-group">
+          <label for="calc-runtime">Runtime Component</label>
+          <select id="calc-runtime" class="form-control" onchange="updateVersionOptions()">
+            <option value="php">PHP (php-fpm / mod_php / cli)</option>
+            <option value="nodejs">Node.js (Brotli RCE)</option>
+            <option value="bun">Bun Engine</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="calc-version">Detected Version String</label>
+          <input type="text" id="calc-version" class="form-control" placeholder="e.g. 8.3.35" value="8.3.35">
+        </div>
+        <button class="btn-calc" onclick="evaluateVersion()" id="btn-eval">Evaluate Status</button>
+      </div>
+
+      <div class="calc-result" id="calc-result">
+        <div id="result-badge" class="result-badge badge-vulnerable">VULNERABLE_PATCH_AVAILABLE</div>
+        <p id="result-notes" style="color: var(--text-muted); font-size: 0.95rem; margin-bottom: 8px;"></p>
+        <p id="result-fix" style="font-family: var(--font-mono); font-size: 0.9rem; color: var(--primary-cyan);"></p>
+      </div>
+    </div>
+
+    <!-- Core Features & Architecture -->
+    <section class="section-header" id="features">
+      <h2 class="section-title">Engine Architecture and Security Guarantees</h2>
+      <p class="section-desc">Built for enterprise compliance, high-availability environments, and strict safety rules.</p>
+    </section>
+
+    <div class="feature-grid">
+      <div class="feature-card">
+        <div class="feature-icon">🛡️</div>
+        <h3 class="feature-title">Read-Only Safety Guarantee</h3>
+        <p class="feature-desc">Never modifies system files, services, or network states unless explicitly instructed via the apply command with double confirmation.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">🔄</div>
+        <h3 class="feature-title">Atomic Pre-Validation Rollback</h3>
+        <p class="feature-desc">When applying mitigations, syntax checks (nginx -t, php-fpm -t, apache2ctl -t) execute before activation. Any failure triggers automatic rollback to backup.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">🔍</div>
+        <h3 class="feature-title">False-Positive Free Log Scanner</h3>
+        <p class="feature-desc">Targeted log discovery scans real web error logs and process trees while ignoring vendor code and test fixtures. Strictly adheres to the IOC7 wording rule.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">📊</div>
+        <h3 class="feature-title">Multi-Format Enterprise Reporting</h3>
+        <p class="feature-desc">Outputs standalone responsive HTML dashboards, print-ready PDF summaries, SARIF 2.1.0, JUnit XML, Markdown, CSV, and Diff reports with white-label options.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">🚀</div>
+        <h3 class="feature-title">Dynamic Multi-Vulnerability Feed</h3>
+        <p class="feature-desc">Automatically ingests new security advisories from local JSON definitions or remote feeds. New branches and zero-days are identified without code redeployments.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">📦</div>
+        <h3 class="feature-title">Distro Package Backport Aware</h3>
+        <p class="feature-desc">Differentiates upstream releases from Debian, Ubuntu, Alpine, and RHEL package versions. Parses distribution changelogs to detect patched backports.</p>
+      </div>
+    </div>
+
+    <!-- Releases and Downloads Section -->
+    <section id="releases" class="releases-section">
+      <div class="section-header">
+        <h2 class="section-title">Releases and Binary Downloads</h2>
+        <p class="section-subtitle">Official verified standalone releases, cryptographic checksums, and package tags.</p>
+      </div>
+
+      <div class="release-card">
+        <div class="release-header">
+          <div class="release-meta">
+            <span class="release-tag">Latest Release: v0.3.0</span>
+            <span class="release-date">Released October 2026</span>
+          </div>
+          <a href="https://github.com/malikad778/php2shell-guard/releases/tag/v0.3.0" target="_blank" rel="noopener" class="btn-release-gh">
+            View Release on GitHub &rarr;
+          </a>
+        </div>
+
+        <div class="asset-grid">
+          <div class="asset-item">
+            <div class="asset-info">
+              <span class="asset-name">php2shell-guard.phar</span>
+              <span class="asset-desc">Standalone executable PHAR archive (Zero dependencies, PHP 5.4 - 8.4+)</span>
+            </div>
+            <a href="https://github.com/malikad778/php2shell-guard/releases/download/v0.3.0/php2shell-guard.phar" class="btn-download" download>
+              Download PHAR
+            </a>
+          </div>
+
+          <div class="asset-item">
+            <div class="asset-info">
+              <span class="asset-name">audit.sh</span>
+              <span class="asset-desc">POSIX compliant standalone audit script (Works via curl in any shell)</span>
+            </div>
+            <a href="https://github.com/malikad778/php2shell-guard/releases/download/v0.3.0/audit.sh" class="btn-download" download>
+              Download Script
+            </a>
+          </div>
+
+          <div class="asset-item">
+            <div class="asset-info">
+              <span class="asset-name">SHA256SUMS.txt</span>
+              <span class="asset-desc">Official cryptographic verification signatures</span>
+            </div>
+            <a href="https://github.com/malikad778/php2shell-guard/releases/download/v0.3.0/SHA256SUMS.txt" class="btn-download" download>
+              Download Checksums
+            </a>
+          </div>
+        </div>
+
+        <div class="checksum-box">
+          <div class="checksum-header">
+            <span>Verified SHA-256 Checksums</span>
+            <button class="btn-copy" onclick="copyCode('release-checksums-code', this)">Copy</button>
+          </div>
+          <pre class="checksum-code" id="release-checksums-code">179b24f4a925b63e94f0f7a51da4ab1b73313bde439135c93389c6b674e24d68  php2shell-guard.phar
+a96c14fea63b947264bb28d8616f64d60fca61d0b8e338a42a9c17e6d86a19f3  audit.sh
+f7bbe811ee02eafdb2f5354a2751723762641460b7330e234dd4647d69c68834  php2shell-guard.mjs
+f4ef1a81b4b5437e21f955021e1166085092664b503ec50fbe0735989c0fb9c7  audit-legacy.php</pre>
+        </div>
+      </div>
+    </section>
+
+    <!-- Topics and Tags Section -->
+    <section class="tags-section">
+      <div class="tags-container">
+        <span class="tags-label">Repository Topics and Security Tags:</span>
+        <div class="tags-list">
+          <a href="https://github.com/topics/php" target="_blank" rel="noopener" class="tag-pill">#php</a>
+          <a href="https://github.com/topics/security" target="_blank" rel="noopener" class="tag-pill">#security</a>
+          <a href="https://github.com/topics/cve-2026-109618" target="_blank" rel="noopener" class="tag-pill">#cve-2026-109618</a>
+          <a href="https://github.com/topics/cve-2026-109619" target="_blank" rel="noopener" class="tag-pill">#cve-2026-109619</a>
+          <a href="https://github.com/topics/cve-2026-111497" target="_blank" rel="noopener" class="tag-pill">#cve-2026-111497</a>
+          <a href="https://github.com/topics/php2shell" target="_blank" rel="noopener" class="tag-pill">#php2shell</a>
+          <a href="https://github.com/topics/brotli" target="_blank" rel="noopener" class="tag-pill">#brotli</a>
+          <a href="https://github.com/topics/audit" target="_blank" rel="noopener" class="tag-pill">#audit</a>
+          <a href="https://github.com/topics/security-audit" target="_blank" rel="noopener" class="tag-pill">#security-audit</a>
+          <a href="https://github.com/topics/vulnerability-scanner" target="_blank" rel="noopener" class="tag-pill">#vulnerability-scanner</a>
+          <a href="https://github.com/topics/devsecops" target="_blank" rel="noopener" class="tag-pill">#devsecops</a>
+          <a href="https://github.com/topics/infosec" target="_blank" rel="noopener" class="tag-pill">#infosec</a>
+        </div>
+      </div>
+    </section>
+
+    <!-- About Maintainer Section -->
+    <section id="about" class="about-section">
+      <div class="about-card">
+        <div class="author-badge">
+          <div class="author-avatar">MA</div>
+          <div class="author-details">
+            <h3 class="author-name">Malik Adnan</h3>
+            <p class="author-role">Security Researcher, DevSecOps Architect and Open Source Author</p>
+          </div>
+        </div>
+        <div class="about-content">
+          <p class="about-text">
+            Malik Adnan builds hardened infrastructure tools, defensive runtime security guards, and automated DevSecOps pipelines.
+            php2shell-guard was authored to provide engineers and site reliability teams with an instant, zero-dependency, safe scanner
+            for PHP2Shell and Node.js vulnerability waves with automated rollback protection and accurate log discovery.
+          </p>
+          <div class="author-links">
+            <a href="https://github.com/malikad778" target="_blank" rel="noopener" class="author-link-btn">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/></svg>
+              GitHub @malikad778
+            </a>
+            <a href="https://codebyadnan.tech" target="_blank" rel="noopener" class="author-link-btn">
+              🌐 Website (codebyadnan.tech)
+            </a>
+            <a href="https://codebyadnan.tech/php2shell-guard/" target="_blank" rel="noopener" class="author-link-btn">
+              📖 Live Documentation
+            </a>
+            <a href="https://github.com/malikad778/php2shell-guard/issues" target="_blank" rel="noopener" class="author-link-btn">
+              💬 Report Vulnerability Issue
+            </a>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container">
+      <div class="footer-links">
+        <a href="https://github.com/malikad778/php2shell-guard" target="_blank" rel="noopener">GitHub Repository</a>
+        <a href="https://codebyadnan.tech/php2shell-guard/" target="_blank" rel="noopener">Documentation</a>
+        <a href="https://github.com/malikad778/php2shell-guard/releases" target="_blank" rel="noopener">Releases &amp; Checksums</a>
+        <a href="https://github.com/malikad778/php2shell-guard/blob/main/docs/am-i-vulnerable.md" target="_blank" rel="noopener">Vulnerability FAQ</a>
+        <a href="https://github.com/malikad778/php2shell-guard/blob/main/SECURITY.md" target="_blank" rel="noopener">Security Policy</a>
+        <a href="https://codebyadnan.tech" target="_blank" rel="noopener">Author Website</a>
+      </div>
+      <p>php2shell-guard is open source under the MIT License. Authored by Malik Adnan.</p>
+    </div>
+  </footer>
+
+  <script>
+    // Tab Switching Logic
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+        btn.classList.add('active');
+        const targetId = btn.getAttribute('data-tab');
+        const targetContent = document.getElementById(targetId);
+        if (targetContent) targetContent.classList.add('active');
+      });
+    });
+
+    // Copy Code Helper
+    function copyCode(elementId, btn) {
+      const codeEl = document.getElementById(elementId);
+      if (!codeEl) return;
+      navigator.clipboard.writeText(codeEl.innerText).then(() => {
+        const originalText = btn.innerText;
+        btn.innerText = 'Copied!';
+        btn.style.background = '#10b981';
+        btn.style.color = '#000';
+        setTimeout(() => {
+          btn.innerText = originalText;
+          btn.style.background = '';
+          btn.style.color = '';
+        }, 2000);
+      });
+    }
+
+    // Dynamic Version Evaluation Engine (Client-side mirror)
+    const ADVISORY_RULES = {
+      php: {
+        '8.5': { fixed: '8.5.12', eol: false },
+        '8.4': { fixed: '8.4.27', eol: false },
+        '8.3': { fixed: '8.3.36', eol: false },
+        '8.2': { fixed: '8.2.35', eol: false },
+        '8.1': { fixed: null, eol: true },
+        '8.0': { fixed: null, eol: true },
+        '7.4': { fixed: null, eol: true }
+      },
+      nodejs: {
+        '26': { fixed: '26.12.1', eol: false },
+        '24': { fixed: '24.22.1', eol: false },
+        '22': { fixed: '22.23.4', eol: false },
+        '25': { fixed: null, eol: true },
+        '23': { fixed: null, eol: true },
+        '20': { fixed: null, eol: true },
+        '18': { fixed: null, eol: true }
+      },
+      bun: {
+        '1.4': { fixed: '1.4.5', eol: false }
+      }
+    };
+
+    function updateVersionOptions() {
+      const runtime = document.getElementById('calc-runtime').value;
+      const input = document.getElementById('calc-version');
+      if (runtime === 'php') input.value = '8.3.35';
+      else if (runtime === 'nodejs') input.value = '22.23.3';
+      else if (runtime === 'bun') input.value = '1.4.3';
+      evaluateVersion();
+    }
+
+    function evaluateVersion() {
+      const runtime = document.getElementById('calc-runtime').value;
+      const rawVer = document.getElementById('calc-version').value.trim();
+      const match = rawVer.match(/([0-9]+)\.([0-9]+)(\.([0-9]+))?/);
+      const resContainer = document.getElementById('calc-result');
+      const badge = document.getElementById('result-badge');
+      const notes = document.getElementById('result-notes');
+      const fix = document.getElementById('result-fix');
+
+      if (!match) {
+        badge.className = 'result-badge badge-vulnerable';
+        badge.innerText = 'INVALID_FORMAT';
+        notes.innerText = 'Could not parse semantic version string.';
+        fix.innerText = '';
+        resContainer.classList.add('active');
+        return;
+      }
+
+      const major = parseInt(match[1], 10);
+      const minor = parseInt(match[2], 10);
+      const patch = match[4] ? parseInt(match[4], 10) : 0;
+      const branchKey = runtime === 'nodejs' ? String(major) : `${major}.${minor}`;
+      const rules = ADVISORY_RULES[runtime] || {};
+      const branchInfo = rules[branchKey];
+
+      if (branchInfo) {
+        if (branchInfo.eol) {
+          badge.className = 'result-badge badge-eol';
+          badge.innerText = 'EOL_NO_OFFICIAL_RELEASE';
+          notes.innerText = `Branch ${branchKey} is End-of-Life and receives no official security updates. Upgrade is recommended.`;
+          fix.innerText = runtime === 'php' ? 'Recommended Migration Target: >= 8.3.36 or >= 8.4.27' : 'Recommended Migration Target: >= 22.23.4 or >= 24.22.1';
+        } else if (branchInfo.fixed) {
+          const fParts = branchInfo.fixed.split('.').map(Number);
+          const isPatched = (major > fParts[0]) ||
+                            (major === fParts[0] && minor > fParts[1]) ||
+                            (major === fParts[0] && minor === fParts[1] && patch >= fParts[2]);
+
+          if (isPatched && !/(-dev|rc|alpha|beta)/i.test(rawVer)) {
+            badge.className = 'result-badge badge-patched';
+            badge.innerText = 'PATCHED';
+            notes.innerText = `Version ${rawVer} is at or above fixed release ${branchInfo.fixed}. Ensure all worker processes are restarted.`;
+            fix.innerText = `Active Fixed Target: ${branchInfo.fixed}`;
+          } else {
+            badge.className = 'result-badge badge-vulnerable';
+            badge.innerText = 'VULNERABLE_PATCH_AVAILABLE';
+            notes.innerText = `Version ${rawVer} is vulnerable to remote code execution. Immediate update required.`;
+            fix.innerText = `Required Minimum Fixed Release: ${branchInfo.fixed}`;
+          }
+        }
+      } else {
+        if ((runtime === 'php' && major < 8) || (runtime === 'nodejs' && major < 22)) {
+          badge.className = 'result-badge badge-eol';
+          badge.innerText = 'EOL_NO_OFFICIAL_RELEASE';
+          notes.innerText = `Legacy branch ${branchKey} is End-of-Life with no official security patch available.`;
+          fix.innerText = runtime === 'php' ? 'Upgrade Target: >= 8.3.36' : 'Upgrade Target: >= 22.23.4';
+        } else {
+          badge.className = 'result-badge badge-patched';
+          badge.innerText = 'NEWER_THAN_DATABASE';
+          notes.innerText = `Branch ${branchKey} is newer than active advisory records. Check db:update for latest definitions.`;
+          fix.innerText = '';
+        }
+      }
+
+      resContainer.classList.add('active');
+    }
+
+    // Initialize on page load
+    window.addEventListener('DOMContentLoaded', () => {
+      evaluateVersion();
+    });
+  </script>
+</body>
+</html>

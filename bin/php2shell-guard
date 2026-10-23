@@ -1,0 +1,21 @@
+#!/usr/bin/env php
+<?php
+/*
+ * php2shell-guard primary PHP CLI entrypoint (bin/php2shell-guard)
+ */
+
+$autoloadPaths = array(
+    __DIR__ . '/../vendor/autoload.php',
+    __DIR__ . '/../../../autoload.php',
+    __DIR__ . '/../src/Autoloader.php',
+);
+
+foreach ($autoloadPaths as $autoload) {
+    if (file_exists($autoload)) {
+        require_once $autoload;
+        break;
+    }
+}
+
+$app = new \Malikad\Php2ShellGuard\Cli\Application();
+exit($app->run($argv));

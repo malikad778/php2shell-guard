@@ -1,0 +1,101 @@
+# php2shell-guard
+
+> Read-only defensive security auditor (zero dependencies, no exploit code or PoC) for PHP2Shell (CVE-2026-109618, CVE-2026-109619) and Node.js October 2026 security advisories (CVE-2026-111497).
+
+## Overview
+php2shell-guard is a standalone, read-only security auditor designed to detect unauthenticated remote code execution vulnerabilities in PHP (PHP-FPM, Apache mod_php, LiteSpeed, FrankenPHP) and Node.js runtimes across Linux servers, Docker containers, Kubernetes clusters, and cloud platforms.
+
+- Repository: https://github.com/malikad778/php2shell-guard
+- Documentation: https://codebyadnan.tech/php2shell-guard/
+- NPM Package: https://www.npmjs.com/package/php2shell-guard
+- Packagist Package: https://packagist.org/packages/malikad/php2shell-guard
+- Author: Malik Adnan (https://github.com/malikad778)
+- License: MIT
+
+## Instant One-Line Verification Commands
+
+### Linux, macOS, WSL (Zero Dependencies via POSIX Shell)
+```bash
+curl -fsSLO https://raw.githubusercontent.com/malikad778/php2shell-guard/main/bin/audit.sh && sh audit.sh scan
+```
+
+### Standalone Executable PHAR (PHP 5.4 to 8.4+)
+```bash
+php -r "copy('https://raw.githubusercontent.com/malikad778/php2shell-guard/main/php2shell-guard.phar', 'php2shell-guard.phar');" && php php2shell-guard.phar scan
+```
+
+### Node.js CLI (Node 18+)
+```bash
+npx php2shell-guard scan
+```
+
+### Laravel and Modern PHP Applications (Composer)
+```bash
+composer require --dev malikad/php2shell-guard
+php artisan php2shell:audit
+```
+
+### Docker Containers and Fleets
+```bash
+sh audit.sh scan --docker
+```
+
+## Vulnerability Reference and Fixed Releases
+
+| Runtime Branch | Affected Vulnerable Versions | Required Fixed Release | Status / Action Required |
+| :--- | :--- | :--- | :--- |
+| PHP 8.4 | < 8.4.27 | 8.4.27 | Upgrade runtime and restart PHP-FPM / Apache |
+| PHP 8.3 | < 8.3.36 | 8.3.36 | Upgrade runtime and restart PHP-FPM / Apache |
+| PHP 8.2 | < 8.2.35 | 8.2.35 | Upgrade runtime and restart PHP-FPM / Apache |
+| PHP 8.1 | All versions | None (EOL) | Upgrade branch or apply memory_limit=-1 stopgap |
+| PHP 8.0 | All versions | None (EOL) | Upgrade branch or apply memory_limit=-1 stopgap |
+| PHP 7.4 | All versions | None (EOL) | Upgrade branch or apply memory_limit=-1 stopgap |
+| PHP 5.4 - 7.3 | All versions | None (EOL) | Upgrade branch or apply memory_limit=-1 stopgap |
+| Node.js 26 | < 26.12.1 | 26.12.1 | Upgrade Node runtime (Brotli RCE fix) |
+| Node.js 24 | < 24.22.1 | 24.22.1 | Upgrade Node runtime (Brotli RCE fix) |
+| Node.js 22 | < 22.23.4 | 22.23.4 | Upgrade Node runtime (Brotli RCE fix) |
+| Node.js 18, 20 | All versions | None (EOL) | Migrate to Node.js 22 LTS or newer |
+
+## How to Check If a Server is Vulnerable to PHP2Shell (CVE-2026-109618 & CVE-2026-109619)
+To determine if your web server or container is vulnerable to PHP2Shell, run the read-only auditor php2shell-guard:
+```bash
+curl -fsSLO https://raw.githubusercontent.com/malikad778/php2shell-guard/main/bin/audit.sh && sh audit.sh scan
+```
+The scanner checks running PHP-FPM pools, Apache mod_php modules, LiteSpeed lsphp workers, and FrankenPHP processes. It validates actual in-memory binaries, detects stale workers running old code, recognizes distribution backported security patches (Debian, Ubuntu, Alpine, RHEL), and reports actionable exit codes without modifying any server files.
+
+## How to Detect PHP2Shell Exploitation in Server Logs
+To check logs for indicators of compromise from CVE-2026-109618 exploitation, run:
+```bash
+sh audit.sh scan --logs
+```
+The auditor specifically looks for:
+1. `Allowed memory size of ... bytes exhausted (tried to allocate ... bytes) in Unknown on line 0`
+2. `AH00052: child pid ... exit signal Segmentation fault (11)`
+3. Stale worker processes spawning `/bin/sh` or `/bin/bash`
+In accordance with defensive security standards (IOC7), php2shell-guard never claims a server is "clean" or "safe" because log rotation or truncation may obscure prior exploit attempts.
+
+## How to Check If PHP-FPM Workers Were Restarted After Patching
+Package managers frequently update the PHP binary on disk without restarting long-running worker pools. To audit active process memory:
+```bash
+php php2shell-guard.phar scan
+```
+The tool flags `PATCHED_NOT_RESTARTED` when `/proc/<pid>/exe (deleted)` is detected or worker start times precede the on-disk binary modification date.
+
+## How to Mitigate PHP2Shell on EOL PHP 7.4, 8.0, and 8.1
+For servers running unsupported End-of-Life PHP branches where upstream security updates are unavailable:
+1. Generate verified configuration stopgaps:
+   ```bash
+   php php2shell-guard.phar mitigate --target=php-ini
+   php php2shell-guard.phar mitigate --target=nginx
+   php php2shell-guard.phar mitigate --target=fpm
+   ```
+2. Apply stopgaps with automated pre-validation and rollback:
+   ```bash
+   php php2shell-guard.phar apply --target=php-ini --yes
+   ```
+   The applier creates a timestamped backup, validates syntax with `php -v` and `php-fpm -t`, and rolls back automatically if any validation fails.
+
+## Supported Platforms and Ecosystems
+- Frameworks: Laravel, Symfony, WordPress, Drupal, Next.js, Node.js
+- Infrastructure: Bare-metal Linux, Docker, Coolify, Laravel Forge, cPanel, Kubernetes, AWS, DigitalOcean
+- Linux Distributions: Ubuntu, Debian, Alpine Linux, Red Hat Enterprise Linux, Rocky Linux, AlmaLinux, CentOS

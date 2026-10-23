@@ -1,0 +1,230 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/malikad778/php2shell-guard/data/schema/advisory.schema.json",
+  "title": "php2shell-guard Advisory Schema",
+  "type": "object",
+  "required": [
+    "id",
+    "title",
+    "product",
+    "cves",
+    "severity",
+    "published",
+    "branches",
+    "mitigations",
+    "sources",
+    "exploitation",
+    "last_verified"
+  ],
+  "properties": {
+    "id": {
+      "type": "string",
+      "pattern": "^[a-z0-9-]+$"
+    },
+    "title": {
+      "type": "string"
+    },
+    "product": {
+      "type": "string",
+      "pattern": "^[a-z0-9_-]+$"
+    },
+    "cves": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "string",
+        "pattern": "^CVE-[0-9]{4}-[0-9]+$"
+      }
+    },
+    "cve_details": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "object",
+        "required": [
+          "summary",
+          "cvss",
+          "severity"
+        ],
+        "properties": {
+          "summary": {
+            "type": "string"
+          },
+          "cvss": {
+            "type": "number"
+          },
+          "severity": {
+            "type": "string"
+          },
+          "affected_branches": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "fixed_in": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    },
+    "severity": {
+      "type": "object",
+      "required": [
+        "label"
+      ],
+      "properties": {
+        "cvss_v4": {
+          "type": "number"
+        },
+        "cvss_v3": {
+          "type": "number"
+        },
+        "label": {
+          "type": "string",
+          "enum": [
+            "critical",
+            "high",
+            "medium",
+            "low"
+          ]
+        }
+      }
+    },
+    "published": {
+      "type": "string",
+      "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}$"
+    },
+    "affected": {
+      "type": "object",
+      "properties": {
+        "sapis": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "earliest_affected_path": {
+          "type": "string"
+        },
+        "notes": {
+          "type": "string"
+        }
+      }
+    },
+    "branches": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": [
+          "branch",
+          "fixed"
+        ],
+        "properties": {
+          "branch": {
+            "type": "string"
+          },
+          "fixed": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "eol": {
+            "type": "boolean"
+          },
+          "source_backport_available": {
+            "type": "boolean"
+          },
+          "notes": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "mitigations": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "title",
+          "covers",
+          "confidence",
+          "source",
+          "notes"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          },
+          "covers": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "confidence": {
+            "type": "string",
+            "enum": [
+              "official",
+              "official-partial",
+              "vendor-reported",
+              "reasoning-based"
+            ]
+          },
+          "weak": {
+            "type": "boolean"
+          },
+          "source": {
+            "type": "string"
+          },
+          "notes": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "sources": {
+      "type": "array",
+      "minItems": 2,
+      "items": {
+        "type": "string",
+        "format": "uri"
+      }
+    },
+    "exploitation": {
+      "type": "object",
+      "required": [
+        "reported",
+        "kev",
+        "last_checked"
+      ],
+      "properties": {
+        "reported": {
+          "type": "boolean"
+        },
+        "kev": {
+          "type": "boolean"
+        },
+        "earliest_observed": {
+          "type": "string"
+        },
+        "last_checked": {
+          "type": "string",
+          "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}$"
+        }
+      }
+    },
+    "last_verified": {
+      "type": "string",
+      "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}$"
+    }
+  }
+}

@@ -1,0 +1,14 @@
+# php2shell-guard generated mitigation snippet (Target: systemd worker reload timer)
+# Covers: CVE-2026-109619 (M9 periodic worker reload)
+# Confidence: Vendor-reported (Armis / ServiceNow)
+# IMPORTANT: Reduces exposure only. This does not replace patching.
+
+[Unit]
+Description=Periodic PHP-FPM worker reload timer (php2shell-guard M9)
+
+[Timer]
+OnCalendar=*:0/15
+Persistent=true
+
+[Install]
+WantedBy=timers.target

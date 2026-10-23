@@ -1,0 +1,82 @@
+{
+  "last_verified": "2026-10-23",
+  "distros": {
+    "ubuntu": {
+      "24.04": {
+        "name": "Noble Numbat",
+        "security_support_until": "2029-05-31",
+        "eol": false
+      },
+      "22.04": {
+        "name": "Jammy Jellyfish",
+        "security_support_until": "2027-04-01",
+        "eol": false
+      },
+      "20.04": {
+        "name": "Focal Fossa",
+        "security_support_until": "2025-05-29",
+        "eol": true,
+        "extended_support": "Ubuntu Pro"
+      },
+      "18.04": {
+        "name": "Bionic Beaver",
+        "security_support_until": "2023-05-31",
+        "eol": true,
+        "extended_support": "Ubuntu Pro"
+      }
+    },
+    "debian": {
+      "13": {
+        "name": "trixie",
+        "security_support_until": "2030-06-30",
+        "eol": false
+      },
+      "12": {
+        "name": "bookworm",
+        "security_support_until": "2028-06-30",
+        "eol": false
+      },
+      "11": {
+        "name": "bullseye",
+        "security_support_until": "2026-08-31",
+        "eol": true,
+        "extended_support": "Freexian ELTS"
+      },
+      "10": {
+        "name": "buster",
+        "security_support_until": "2024-06-30",
+        "eol": true
+      }
+    },
+    "alpine": {
+      "3.21": {
+        "security_support_until": "2026-11-01",
+        "eol": false,
+        "eol_within_90_days": true
+      },
+      "3.20": {
+        "security_support_until": "2026-05-01",
+        "eol": true
+      },
+      "3.19": {
+        "security_support_until": "2025-11-01",
+        "eol": true
+      }
+    },
+    "rhel": {
+      "9": {
+        "security_support_until": "2032-05-31",
+        "eol": false
+      },
+      "8": {
+        "security_support_until": "2029-05-31",
+        "eol": false
+      },
+      "7": {
+        "security_support_until": "2024-06-30",
+        "eol": true,
+        "extended_support": "RHEL ELS / TuxCare"
+      }
+    }
+  }
+}

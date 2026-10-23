@@ -1,0 +1,45 @@
+# php2shell-guard generated Ansible playbook (Target: ansible fleet remediation)
+# Covers: CVE-2026-109618, CVE-2026-109619 (M1 patch + worker restart, M2/M5 stopgaps)
+# Confidence: Official
+# IMPORTANT: Stopgap tasks reduce exposure only. Upgrading the runtime and restarting all workers is the only complete defense.
+---
+- name: Remediate PHP2Shell (CVE-2026-109618 & CVE-2026-109619) and restart workers
+  hosts: webservers
+  become: true
+  vars:
+    php_branch: "8.3"
+    apply_stopgaps: true
+  tasks:
+    - name: Update apt cache on Debian/Ubuntu hosts
+      ansible.builtin.apt:
+        update_cache: true
+      when: ansible_os_family == "Debian"
+
+    - name: Upgrade PHP packages on Debian/Ubuntu hosts
+      ansible.builtin.apt:
+        name: "php{{ php_branch }}*"
+        state: latest
+        only_upgrade: true
+      when: ansible_os_family == "Debian"
+      notify: Restart PHP-FPM
+
+    - name: Deploy defense-in-depth PHP INI snippet (M2, M4, M5, M6)
+      ansible.builtin.copy:
+        src: ../php-ini/99-php2shell-mitigation.ini
+        dest: "/etc/php/{{ php_branch }}/fpm/conf.d/99-php2shell-mitigation.ini"
+        owner: root
+        group: root
+        mode: "0644"
+        backup: true
+      when: apply_stopgaps
+      notify: Restart PHP-FPM
+
+    - name: Validate PHP-FPM configuration before restart
+      ansible.builtin.command: "php-fpm{{ php_branch }} -t"
+      changed_when: false
+
+  handlers:
+    - name: Restart PHP-FPM
+      ansible.builtin.systemd:
+        name: "php{{ php_branch }}-fpm"
+        state: restarted

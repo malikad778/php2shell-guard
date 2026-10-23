@@ -1,0 +1,2 @@
+[21-Oct-2026 09:14:22 UTC] PHP Fatal error:  Allowed memory size of 134217728 bytes exhausted (tried to allocate 3670016 bytes) in Unknown on line 0
+[21-Oct-2026 09:15:01 UTC] PHP Notice: Undefined index: user in /var/www/html/index.php on line 14

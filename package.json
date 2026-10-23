@@ -1,0 +1,51 @@
+{
+  "name": "php2shell-guard",
+  "version": "0.3.0",
+  "description": "Read-only runtime, configuration, Brotli exposure, and IaC auditor for PHP2Shell (CVE-2026-109618, CVE-2026-109619) and Node.js October 2026 CVEs (CVE-2026-111497).",
+  "license": "MIT",
+  "type": "module",
+  "bin": {
+    "php2shell-guard": "bin/php2shell-guard.js"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "scripts": {
+    "test": "node --test tests/node/cli.test.mjs",
+    "verify-db": "node ./bin/php2shell-guard.mjs db:verify"
+  },
+  "main": "./bin/php2shell-guard.mjs",
+  "files": [
+    "bin",
+    "data",
+    "templates",
+    "README.md",
+    "LICENSE",
+    "SECURITY.md",
+    "CHANGELOG.md"
+  ],
+  "publishConfig": {
+    "access": "public"
+  },
+  "homepage": "https://codebyadnan.tech/php2shell-guard/",
+  "bugs": {
+    "url": "https://github.com/malikad778/php2shell-guard/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/malikad778/php2shell-guard.git"
+  },
+  "keywords": [
+    "php2shell",
+    "node2shell",
+    "CVE-2026-109618",
+    "CVE-2026-109619",
+    "CVE-2026-111497",
+    "brotli",
+    "security-audit",
+    "runtime-guard",
+    "devsecops",
+    "vulnerability-scanner"
+  ],
+  "author": "Malik Adnan <https://github.com/malikad778>"
+}

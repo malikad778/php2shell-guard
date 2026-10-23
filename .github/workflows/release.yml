@@ -1,0 +1,41 @@
+name: Release PHAR & Checksums
+
+on:
+  push:
+    tags:
+      - "v*.*.*"
+
+permissions:
+  contents: write
+  id-token: write
+
+jobs:
+  release:
+    runs-on: ubuntu-24.04
+    env:
+      NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - name: Verify database and tests before release
+        run: |
+          sh tests/shell/test_audit_sh.sh
+          node bin/php2shell-guard.mjs db:verify
+          node --test tests/node/cli.test.mjs
+      - name: Generate SHA256SUMS
+        run: |
+          sha256sum bin/audit.sh bin/audit-legacy.php bin/php2shell-guard bin/php2shell-guard.mjs > SHA256SUMS
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          registry-url: https://registry.npmjs.org
+      - name: Publish to npm
+        if: env.NPM_TOKEN != ''
+        run: |
+          CURRENT_VER=$(node -p "require('./package.json').version")
+          if npm view php2shell-guard@$CURRENT_VER version > /dev/null 2>&1; then
+            echo "php2shell-guard@$CURRENT_VER is already published on npm; skipping."
+          else
+            npm publish --access public
+          fi
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}

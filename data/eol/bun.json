@@ -1,0 +1,7 @@
+{
+  "product": "bun",
+  "last_verified": "2026-10-23",
+  "verification_status": "VERIFY_REQUIRED",
+  "advisory_note": "Status of Bun 1.4.4 is marked VERIFY per plan.md item 15.1. Users must verify against Bun's official release notes and Brotli build flags.",
+  "unverified_draft_minimum": "1.4.4"
+}

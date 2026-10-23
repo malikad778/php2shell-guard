@@ -1,0 +1,26 @@
+name: "php2shell-guard Runtime & IaC Audit"
+description: "Audit Dockerfiles, composer.json, package.json, CI workflows, and host runtimes for PHP2Shell (CVE-2026-109618, CVE-2026-109619) and Node2Shell (CVE-2026-111497)."
+author: "Malik Adnan (malikad778)"
+branding:
+  icon: "shield"
+  color: "red"
+inputs:
+  path:
+    description: "Project path to scan"
+    required: false
+    default: "."
+  fail-on:
+    description: "Minimum status to fail CI (vulnerable, eol, unknown)"
+    required: false
+    default: "vulnerable"
+  format:
+    description: "Output format (table, json, sarif, md)"
+    required: false
+    default: "table"
+runs:
+  using: "composite"
+  steps:
+    - name: Run php2shell-guard project scan
+      shell: bash
+      run: |
+        node "${{ github.action_path }}/../bin/php2shell-guard.mjs" project:scan "${{ inputs.path }}" --format "${{ inputs.format }}" --fail-on "${{ inputs.fail-on }}" --no-cta

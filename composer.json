@@ -1,0 +1,53 @@
+{
+  "name": "malikad/php2shell-guard",
+  "description": "Read-only runtime, SAPI, stale-worker, configuration, and IaC auditor for PHP2Shell (CVE-2026-109618, CVE-2026-109619) and Node.js October 2026 advisories.",
+  "type": "library",
+  "license": "MIT",
+  "keywords": [
+    "php",
+    "security",
+    "audit",
+    "php2shell",
+    "CVE-2026-109618",
+    "CVE-2026-109619",
+    "CVE-2026-111497",
+    "eol",
+    "laravel",
+    "wordpress"
+  ],
+  "homepage": "https://github.com/malikad778/php2shell-guard",
+  "authors": [
+    {
+      "name": "Malik Adnan",
+      "email": "malikad778@users.noreply.github.com",
+      "homepage": "https://github.com/malikad778",
+      "role": "Principal Engineer"
+    }
+  ],
+  "require": {
+    "php": ">=5.4.0"
+  },
+  "autoload": {
+    "psr-4": {
+      "Malikad\\Php2ShellGuard\\": "src/"
+    }
+  },
+  "bin": [
+    "bin/php2shell-guard",
+    "bin/audit-legacy.php"
+  ],
+  "extra": {
+    "laravel": {
+      "providers": [
+        "Malikad\\Php2ShellGuard\\Laravel\\Php2ShellGuardServiceProvider"
+      ]
+    }
+  },
+  "scripts": {
+    "test": "php tests/run.php"
+  },
+  "config": {
+    "sort-packages": true
+  },
+  "minimum-stability": "stable"
+}

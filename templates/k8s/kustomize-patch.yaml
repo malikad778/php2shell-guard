@@ -1,0 +1,22 @@
+# php2shell-guard generated mitigation snippet (Target: k8s)
+# Covers: CVE-2026-109618, CVE-2026-109619 (M1 patched image + M3 cgroup memory boundary)
+# Confidence: Official
+# IMPORTANT: Ensure pod rollout completes and old ReplicaSet pods are terminated.
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: php-app
+spec:
+  template:
+    spec:
+      containers:
+        - name: php-fpm
+          image: php:8.3.36-fpm-alpine
+          resources:
+            requests:
+              memory: "256Mi"
+              cpu: "250m"
+            limits:
+              memory: "512Mi"
+              cpu: "1000m"

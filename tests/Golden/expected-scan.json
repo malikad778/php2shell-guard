@@ -1,0 +1,16 @@
+{
+  "tool": "php2shell-guard",
+  "version": "0.3.0",
+  "advisory_db_date": "2026-10-23",
+  "mode": "read-only",
+  "expected_statuses": [
+    "PATCHED",
+    "PATCHED_BACKPORT",
+    "PATCHED_NOT_RESTARTED",
+    "NOT_DETECTED",
+    "VULNERABLE_PATCH_AVAILABLE",
+    "EOL_NO_OFFICIAL_RELEASE",
+    "UNKNOWN_BACKPORT_POSSIBLE",
+    "UNKNOWN"
+  ]
+}

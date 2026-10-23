@@ -1,0 +1,10 @@
+# php2shell-guard generated mitigation snippet (Target: cloudflare)
+# Covers: CVE-2026-109618, CVE-2026-109619 (M8 WAF custom rule expression)
+# Confidence: Vendor-reported (Cloudflare, Vercel, Datadog)
+# IMPORTANT: Reduces exposure only. WAF inspection has body truncation limits and can be bypassed. This does not replace patching.
+
+(http.request.method eq "POST" and (
+  http.request.body.size gt 8388608 or
+  (http.request.headers["content-type"][0] contains "application/x-www-form-urlencoded" and http.request.body.size gt 3000000) or
+  (http.request.headers["content-type"][0] contains "multipart/form-data" and http.request.body.raw contains "%00")
+))

@@ -1,0 +1,11 @@
+# php2shell-guard generated mitigation snippet (Target: systemd worker reload service)
+# Covers: CVE-2026-109619 (M9 periodic worker reload to clear stale global state)
+# Confidence: Vendor-reported (Armis / ServiceNow)
+# IMPORTANT: Reduces exposure only. This does not replace patching.
+
+[Unit]
+Description=Periodic PHP-FPM worker reload (php2shell-guard M9)
+
+[Service]
+Type=oneshot
+ExecStart=/bin/sh -c 'for svc in $(systemctl list-units --type=service --state=running | awk "/php.*fpm/ {print \$1}"); do systemctl reload "$svc"; done'

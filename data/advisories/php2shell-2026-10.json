@@ -1,0 +1,272 @@
+{
+  "id": "php2shell-2026-10",
+  "title": "PHP2Shell (October 2026 PHP RCE Vulnerabilities)",
+  "product": "php",
+  "cves": [
+    "CVE-2026-109618",
+    "CVE-2026-109619"
+  ],
+  "cve_details": {
+    "CVE-2026-109618": {
+      "summary": "Unauthenticated remote code execution via out-of-memory corruption during request initialization and cleanup.",
+      "cvss": 9.2,
+      "severity": "critical",
+      "affected_branches": [
+        "8.5",
+        "8.4",
+        "8.3",
+        "8.2",
+        "8.1",
+        "8.0",
+        "7.4",
+        "older"
+      ],
+      "fixed_in": [
+        "8.5.12",
+        "8.4.27",
+        "8.3.36",
+        "8.2.35"
+      ]
+    },
+    "CVE-2026-109619": {
+      "summary": "Unauthenticated remote code execution via stale global state across reused worker processes.",
+      "cvss": 9.2,
+      "severity": "critical",
+      "affected_branches": [
+        "8.5",
+        "8.4",
+        "8.3",
+        "8.2",
+        "8.1",
+        "8.0",
+        "7.4",
+        "older"
+      ],
+      "fixed_in": [
+        "8.5.12",
+        "8.4.27",
+        "8.3.36",
+        "8.2.35"
+      ]
+    }
+  },
+  "severity": {
+    "cvss_v4": 9.2,
+    "label": "critical"
+  },
+  "published": "2026-10-21",
+  "affected": {
+    "sapis": [
+      "mod_php",
+      "frankenphp",
+      "fpm",
+      "cgi",
+      "litespeed"
+    ],
+    "sapi_risk_ranking": {
+      "mod_php": "highest (attack can run during request startup before application code with default memory and input limits)",
+      "frankenphp": "high (similar to mod_php by source analysis)",
+      "litespeed": "conditional (LSAPI serving web requests)",
+      "fpm": "affected (upload-progress path confirmed on PHP-FPM)",
+      "cgi": "affected (any PHP SAPI serving web requests)",
+      "cli": "low (not directly serving web requests unless wrapped by an HTTP worker)"
+    },
+    "earliest_affected_path": "5.4.0",
+    "notes": "No configuration mitigation fully blocks attacks. Patching and restarting all workers is the only complete defense."
+  },
+  "branches": [
+    {
+      "branch": "8.5",
+      "fixed": "8.5.12",
+      "eol": false,
+      "source_backport_available": false
+    },
+    {
+      "branch": "8.4",
+      "fixed": "8.4.27",
+      "eol": false,
+      "source_backport_available": false
+    },
+    {
+      "branch": "8.3",
+      "fixed": "8.3.36",
+      "eol": false,
+      "source_backport_available": false
+    },
+    {
+      "branch": "8.2",
+      "fixed": "8.2.35",
+      "eol": false,
+      "source_backport_available": false
+    },
+    {
+      "branch": "8.1",
+      "fixed": null,
+      "eol": true,
+      "source_backport_available": true,
+      "notes": "No official release. PHP published minimal source backports for 8.1 that vendors must package and validate."
+    },
+    {
+      "branch": "8.0",
+      "fixed": null,
+      "eol": true,
+      "source_backport_available": true,
+      "notes": "No official release. PHP published minimal source backports for 8.0 that vendors must package and validate."
+    },
+    {
+      "branch": "7.4",
+      "fixed": null,
+      "eol": true,
+      "source_backport_available": true,
+      "notes": "No official release. PHP published minimal source backports for 7.4 that vendors must package and validate."
+    },
+    {
+      "branch": "older",
+      "fixed": null,
+      "eol": true,
+      "source_backport_available": false,
+      "notes": "End-of-life branch with no official release or upstream source backport. Earliest affected path dates to PHP 5.4.0."
+    }
+  ],
+  "mitigations": [
+    {
+      "id": "M1",
+      "title": "Upgrade to 8.5.12, 8.4.27, 8.3.36, or 8.2.35 and restart all workers",
+      "covers": [
+        "CVE-2026-109618",
+        "CVE-2026-109619"
+      ],
+      "confidence": "official",
+      "weak": false,
+      "source": "https://www.php.net/archive/2026.php#2026-10-21-5",
+      "notes": "The only complete fix. Rebuild containers and restart or replace every PHP worker so old code does not stay in memory."
+    },
+    {
+      "id": "M2",
+      "title": "Enforce memory_limit=-1 administratively via php_admin_value",
+      "covers": [
+        "CVE-2026-109618"
+      ],
+      "confidence": "official-partial",
+      "weak": false,
+      "source": "https://github.com/php/php-src/security/advisories/GHSA-w8hw-w9fx-j79w",
+      "notes": "Removes controllable PHP memory_limit failure. Pair with frontend request size limits and container/cgroup memory boundaries. Other allocation failures can still reach the bug."
+    },
+    {
+      "id": "M3",
+      "title": "Use container or cgroup memory limits, never RLIMIT_AS or RLIMIT_DATA",
+      "covers": [
+        "CVE-2026-109618"
+      ],
+      "confidence": "official",
+      "weak": false,
+      "source": "https://securitylabs.datadoghq.com/articles/php2shell-critical-vulnerabilities-in-php/",
+      "notes": "Use cgroup MemoryMax or container mem_limit as the availability boundary. Avoid ulimit -v, LimitAS, and LimitDATA which trigger in-process allocation failures."
+    },
+    {
+      "id": "M4",
+      "title": "Enforce frontend request size limits and post_max_size",
+      "covers": [
+        "CVE-2026-109618"
+      ],
+      "confidence": "official-partial",
+      "weak": false,
+      "source": "https://securitylabs.datadoghq.com/articles/php2shell-critical-vulnerabilities-in-php/",
+      "notes": "Enforce strict request and decoded body size limits at the reverse proxy and PHP post_max_size (for example 8M, tuned to upload requirements)."
+    },
+    {
+      "id": "M5",
+      "title": "Set session.upload_progress.enabled=0 before request parsing",
+      "covers": [
+        "CVE-2026-109619"
+      ],
+      "confidence": "official-partial",
+      "weak": false,
+      "source": "https://github.com/php/php-src/security/advisories/GHSA-6wmf-4rv5-p3rp",
+      "notes": "Covers one confirmed path of CVE-2026-109619. Must be set in configuration loaded before request parsing, followed by worker restart. Reduces exposure; does not replace patching."
+    },
+    {
+      "id": "M6",
+      "title": "Set fatal_error_backtraces=0 on PHP 8.5",
+      "covers": [
+        "CVE-2026-109619"
+      ],
+      "confidence": "official-partial",
+      "weak": false,
+      "source": "https://github.com/php/php-src/security/advisories/GHSA-6wmf-4rv5-p3rp",
+      "notes": "PHP 8.5 only. Set in startup configuration loaded before request parsing and restart workers."
+    },
+    {
+      "id": "M7",
+      "title": "Remove per-request INI overrides that produce early diagnostics",
+      "covers": [
+        "CVE-2026-109619"
+      ],
+      "confidence": "official",
+      "weak": false,
+      "source": "https://securitylabs.datadoghq.com/articles/php2shell-critical-vulnerabilities-in-php/",
+      "notes": "Remove .htaccess php_value/php_flag under mod_php and FastCGI PHP_VALUE/PHP_ADMIN_VALUE parameters in Nginx that can trigger early startup warnings."
+    },
+    {
+      "id": "M8",
+      "title": "Apply reverse proxy or WAF rules blocking anomalous multipart/form-urlencoded payloads",
+      "covers": [
+        "CVE-2026-109618",
+        "CVE-2026-109619"
+      ],
+      "confidence": "vendor-reported",
+      "weak": false,
+      "source": "https://securitylabs.datadoghq.com/articles/php2shell-critical-vulnerabilities-in-php/",
+      "notes": "Blocks known exploit shapes (oversized form field names, control bytes in form fields, ~3.5 MB form fields). Can be bypassed; reduces exposure only."
+    },
+    {
+      "id": "M9",
+      "title": "Enable aggressive worker recycling (pm.max_requests and scheduled FPM reloads)",
+      "covers": [
+        "CVE-2026-109619"
+      ],
+      "confidence": "reasoning-based",
+      "weak": false,
+      "source": "https://securitylabs.datadoghq.com/articles/php2shell-critical-vulnerabilities-in-php/",
+      "notes": "Lowers the probability that consecutive requests reach the same stale worker state for CVE-2026-109619. Does nothing for CVE-2026-109618."
+    },
+    {
+      "id": "M10",
+      "title": "Isolate or restrict public network access to unpatched PHP applications",
+      "covers": [
+        "CVE-2026-109618",
+        "CVE-2026-109619"
+      ],
+      "confidence": "vendor-reported",
+      "weak": false,
+      "source": "https://www.php.net/archive/2026.php#2026-10-21-5",
+      "notes": "Place internal or legacy PHP applications behind VPN, Zero Trust access, or IP allowlists while migration is prepared."
+    },
+    {
+      "id": "M11",
+      "title": "Evaluate verified vendor-patched builds for EOL PHP 7.4, 8.0, and 8.1",
+      "covers": [
+        "CVE-2026-109618",
+        "CVE-2026-109619"
+      ],
+      "confidence": "vendor-reported",
+      "weak": false,
+      "source": "https://www.php.net/archive/2026.php#2026-10-21-5",
+      "notes": "PHP published minimal source backports for 7.4, 8.0, and 8.1. HeroDevs NES lists a patch for CVE-2026-109618. Verify any vendor or distro build against both CVE IDs."
+    }
+  ],
+  "sources": [
+    "https://www.php.net/archive/2026.php#2026-10-21-5",
+    "https://github.com/php/php-src/security/advisories/GHSA-w8hw-w9fx-j79w",
+    "https://github.com/php/php-src/security/advisories/GHSA-6wmf-4rv5-p3rp",
+    "https://securitylabs.datadoghq.com/articles/php2shell-critical-vulnerabilities-in-php/",
+    "https://coolify.io/docs/knowledge-base/php-security-advisory-2026"
+  ],
+  "exploitation": {
+    "reported": true,
+    "kev": false,
+    "earliest_observed": "2026-10-17",
+    "last_checked": "2026-10-23"
+  },
+  "last_verified": "2026-10-23"
+}

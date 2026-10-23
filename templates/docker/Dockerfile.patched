@@ -1,0 +1,10 @@
+# php2shell-guard generated mitigation snippet (Target: docker)
+# Covers: CVE-2026-109618, CVE-2026-109619 (M1 Official fix + M2/M5 defense-in-depth)
+# Confidence: Official (M1 patched runtime is the only complete defense)
+# IMPORTANT: Rebuild images with --pull --no-cache and recreate all running containers.
+
+FROM php:8.3.36-fpm-alpine
+
+# Copy defense-in-depth PHP-FPM and INI settings
+COPY 99-php2shell-mitigation.ini /usr/local/etc/php/conf.d/99-php2shell-mitigation.ini
+COPY zz-php2shell-pool.conf /usr/local/etc/php-fpm.d/zz-php2shell-pool.conf
