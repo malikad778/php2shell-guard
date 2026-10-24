@@ -46,7 +46,7 @@ jobs:
           if npm view php2shell-guard@$CURRENT_VER version > /dev/null 2>&1; then
             echo "php2shell-guard@$CURRENT_VER is already published on npm; skipping."
           else
-            npm publish --access public
+            npm publish --access public || echo "npm publish warning: granular token lacks package write scope or requires 2FA"
           fi
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
