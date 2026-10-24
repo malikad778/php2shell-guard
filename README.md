@@ -1,7 +1,7 @@
 # php2shell-guard
 
 [![CI](https://img.shields.io/github/actions/workflow/status/malikad778/php2shell-guard/ci.yml?branch=main&label=CI)](https://github.com/malikad778/php2shell-guard/actions)
-[![Version](https://img.shields.io/badge/release-v0.3.0-0f766e)](https://github.com/malikad778/php2shell-guard/releases/tag/v0.3.0)
+[![Version](https://img.shields.io/badge/release-v0.3.1-0f766e)](https://github.com/malikad778/php2shell-guard/releases/tag/v0.3.1)
 [![Documentation](https://img.shields.io/badge/docs-codebyadnan.tech-06b6d4)](https://codebyadnan.tech/php2shell-guard/)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 [![Advisory DB](https://img.shields.io/badge/advisory_db-2026--10--23-b91c1c)](data/advisories/php2shell-2026-10.json)
@@ -19,7 +19,7 @@ Designed for production reliability across legacy bare-metal servers, End-of-Lif
 Explore the live web-based deployment wizard, copy-paste install commands, and real-time vulnerability version calculator:
 - **[Launch Live Portal: codebyadnan.tech/php2shell-guard](https://codebyadnan.tech/php2shell-guard/)**
 - **[View Local Documentation Guide](docs/index.html)**
-- **[Latest Release Assets & Checksums (v0.3.0)](https://github.com/malikad778/php2shell-guard/releases/tag/v0.3.0)**
+- **[Latest Release Assets & Checksums (v0.3.1)](https://github.com/malikad778/php2shell-guard/releases/tag/v0.3.1)**
 
 ---
 
@@ -302,12 +302,12 @@ php2shell-guard --print-commands            Print all read-only commands execute
 
 ## Official Releases and Binary Distribution
 
-Download verified standalone binary archives, standalone scripts, and cryptographic hashes for `v0.3.0`:
+Download verified standalone binary archives, standalone scripts, and cryptographic hashes for `v0.3.1`:
 
-- **Standalone Executable PHAR:** [php2shell-guard.phar (v0.3.0)](https://github.com/malikad778/php2shell-guard/releases/download/v0.3.0/php2shell-guard.phar)
-- **POSIX Shell Audit Script:** [audit.sh (v0.3.0)](https://github.com/malikad778/php2shell-guard/releases/download/v0.3.0/audit.sh)
-- **Cryptographic Hashes:** [SHA256SUMS.txt](https://github.com/malikad778/php2shell-guard/releases/download/v0.3.0/SHA256SUMS.txt)
-- **Full Release Changelog:** [GitHub Release v0.3.0](https://github.com/malikad778/php2shell-guard/releases/tag/v0.3.0)
+- **Standalone Executable PHAR:** [php2shell-guard.phar (v0.3.1)](https://github.com/malikad778/php2shell-guard/releases/download/v0.3.1/php2shell-guard.phar)
+- **POSIX Shell Audit Script:** [audit.sh (v0.3.1)](https://github.com/malikad778/php2shell-guard/releases/download/v0.3.1/audit.sh)
+- **Cryptographic Hashes:** [SHA256SUMS.txt](https://github.com/malikad778/php2shell-guard/releases/download/v0.3.1/SHA256SUMS.txt)
+- **Full Release Changelog:** [GitHub Release v0.3.1](https://github.com/malikad778/php2shell-guard/releases/tag/v0.3.1)
 
 ### Verified SHA-256 Checksums
 

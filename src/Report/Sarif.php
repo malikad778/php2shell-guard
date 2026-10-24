@@ -6,7 +6,7 @@ class Sarif
 {
     public function render(array $reportData, array $options = array())
     {
-        $toolVersion = isset($reportData['version']) ? $reportData['version'] : '0.3.0';
+        $toolVersion = isset($reportData['version']) ? $reportData['version'] : '0.3.1';
         $rules = array();
         $results = array();
 

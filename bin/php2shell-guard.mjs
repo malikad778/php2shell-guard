@@ -15,7 +15,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 export const ROOT_DIR = path.resolve(__dirname, '..');
 export const DB_DATE = '2026-10-23';
-export const TOOL_VERSION = '0.3.0';
+export const TOOL_VERSION = '0.3.1';
 
 export const STATUS = {
   PATCHED: 'PATCHED',

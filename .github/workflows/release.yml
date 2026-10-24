@@ -21,9 +21,20 @@ jobs:
           sh tests/shell/test_audit_sh.sh
           node bin/php2shell-guard.mjs db:verify
           node --test tests/node/cli.test.mjs
-      - name: Generate SHA256SUMS
+      - name: Build standalone PHAR archive and checksums
         run: |
-          sha256sum bin/audit.sh bin/audit-legacy.php bin/php2shell-guard bin/php2shell-guard.mjs > SHA256SUMS
+          php -d phar.readonly=0 bin/build-phar.php
+          cp bin/audit.sh ./audit.sh
+          sha256sum php2shell-guard.phar audit.sh bin/php2shell-guard.mjs bin/audit-legacy.php > SHA256SUMS.txt
+      - name: Create or update GitHub Release
+        run: |
+          gh release view "${{ github.ref_name }}" > /dev/null 2>&1 && \
+          gh release upload "${{ github.ref_name }}" php2shell-guard.phar audit.sh SHA256SUMS.txt --clobber || \
+          gh release create "${{ github.ref_name }}" php2shell-guard.phar audit.sh SHA256SUMS.txt \
+            --title "php2shell-guard ${{ github.ref_name }}: Multi-Runtime Security Auditor" \
+            --notes "Production release ${{ github.ref_name }} with standalone PHAR, POSIX audit script, npm package, and Packagist synchronization."
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - uses: actions/setup-node@v4
         with:
           node-version: 22

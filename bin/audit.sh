@@ -6,7 +6,7 @@
 set -u
 
 DB_DATE="2026-10-23"
-TOOL_VERSION="0.3.0"
+TOOL_VERSION="0.3.1"
 SCRIPT_DIR=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
 ROOT_DIR=$(CDPATH= cd -- "$SCRIPT_DIR/.." && pwd)
 

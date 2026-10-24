@@ -13,7 +13,7 @@ class Html
 
         $host = htmlspecialchars(isset($reportData['host']) ? $reportData['host'] : (isset($reportData['target']) ? $reportData['target'] : 'localhost'), ENT_QUOTES, 'UTF-8');
         $dbDate = htmlspecialchars(isset($reportData['advisory_db_date']) ? $reportData['advisory_db_date'] : '2026-10-23', ENT_QUOTES, 'UTF-8');
-        $toolVersion = htmlspecialchars(isset($reportData['version']) ? $reportData['version'] : '0.3.0', ENT_QUOTES, 'UTF-8');
+        $toolVersion = htmlspecialchars(isset($reportData['version']) ? $reportData['version'] : '0.3.1', ENT_QUOTES, 'UTF-8');
         $runtimes = isset($reportData['runtimes']) && is_array($reportData['runtimes']) ? $reportData['runtimes'] : array();
         $indicators = htmlspecialchars(isset($reportData['indicators']['status']) ? $reportData['indicators']['status'] : 'no indicator found in the logs available (rotation and retention limits apply)', ENT_QUOTES, 'UTF-8');
         $iocCount = isset($reportData['indicators']['count']) ? (int) $reportData['indicators']['count'] : 0;

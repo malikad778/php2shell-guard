@@ -16,7 +16,7 @@ class ReportRenderersTest
     {
         return array(
             'tool' => 'php2shell-guard',
-            'version' => '0.3.0',
+            'version' => '0.3.1',
             'advisory_db_date' => '2026-10-23',
             'host' => 'prod-web-01',
             'target' => '/var/www/html',

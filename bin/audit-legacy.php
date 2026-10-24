@@ -9,7 +9,7 @@
 class Php2ShellLegacyAuditor
 {
     public static $dbDate = '2026-10-23';
-    public static $version = '0.3.0';
+    public static $version = '0.3.1';
 
     public static function extractSemver($raw)
     {

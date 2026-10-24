@@ -26,7 +26,7 @@ use Malikad\Php2ShellGuard\Upgrade\EffortEstimator;
 
 class Application
 {
-    private $version = '0.3.0';
+    private $version = '0.3.1';
     private $dbDate = '2026-10-23';
 
     public function run(array $argv)

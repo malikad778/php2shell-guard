@@ -2,6 +2,12 @@
 
 All notable changes to `php2shell-guard` are documented in this file.
 
+## [0.3.1] - 2026-10-24
+### Changed
+- Release v0.3.1 with immutable Packagist and npm distribution syncing.
+- Enhanced real-time AI/LLM discovery metadata (llms.txt) and JSON-LD schema.
+- Updated release checksums and distribution assets.
+
 ## [0.3.0] - 2026-10-23
 ### Added
 - `apply` mode with automatic backups to `.php2shell-guard/backups/<timestamp>`, syntax validation (`php-fpm -t`, `nginx -t`), and automatic rollback on failure (F7).

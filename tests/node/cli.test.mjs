@@ -164,7 +164,7 @@ test('Dynamic multi-vulnerability advisory engine detection (Section K5)', () =>
 test('Report formatters: Markdown, SARIF, JUnit, CSV (Section 10)', () => {
   const samplePayload = {
     tool: 'php2shell-guard',
-    version: '0.3.0',
+    version: '0.3.1',
     advisory_db_date: '2026-10-23',
     host: 'web-prod-01',
     runtimes: [

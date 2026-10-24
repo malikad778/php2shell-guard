@@ -1,6 +1,6 @@
 {
   "name": "php2shell-guard",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "description": "Read-only runtime, configuration, Brotli exposure, and IaC auditor for PHP2Shell (CVE-2026-109618, CVE-2026-109619) and Node.js October 2026 CVEs (CVE-2026-111497).",
   "license": "MIT",
   "type": "module",

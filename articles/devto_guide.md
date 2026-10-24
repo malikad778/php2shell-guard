@@ -125,4 +125,4 @@ Every modification is saved to `.php2shell-guard/backups/<timestamp>/`. Syntax t
 - **Live Documentation Portal:** https://codebyadnan.tech/php2shell-guard/
 - **NPM Package:** https://www.npmjs.com/package/php2shell-guard
 - **Packagist:** https://packagist.org/packages/malikad/php2shell-guard
-- **Release Assets:** https://github.com/malikad778/php2shell-guard/releases/tag/v0.3.0
+- **Release Assets:** https://github.com/malikad778/php2shell-guard/releases/tag/v0.3.1

@@ -2,7 +2,7 @@
 /**
  * Plugin Name: php2shell-guard Runtime Auditor (MU-Plugin)
  * Description: Read-only Site Health check and admin notice for CVE-2026-109618 and CVE-2026-109619 (PHP2Shell).
- * Version: 0.3.0
+ * Version: 0.3.1
  * Author: Malik Adnan
  * License: MIT
  */

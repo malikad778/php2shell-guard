@@ -6,7 +6,7 @@ class Table
 {
     public function render(array $reportData, array $options = array())
     {
-        $version = isset($reportData['version']) ? $reportData['version'] : '0.3.0';
+        $version = isset($reportData['version']) ? $reportData['version'] : '0.3.1';
         $dbDate = isset($reportData['advisory_db_date']) ? $reportData['advisory_db_date'] : '2026-10-23';
         $host = isset($reportData['host']) ? $reportData['host'] : 'localhost';
         $target = isset($reportData['target']) ? $reportData['target'] : '.';
