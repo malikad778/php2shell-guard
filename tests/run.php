@@ -7,6 +7,7 @@ require_once __DIR__ . '/Unit/IndicatorScannerTest.php';
 require_once __DIR__ . '/Unit/ConfigApplierTest.php';
 require_once __DIR__ . '/Unit/ReportRenderersTest.php';
 require_once __DIR__ . '/Unit/BackportEngineTest.php';
+require_once __DIR__ . '/Unit/SnippetRendererTest.php';
 require_once __DIR__ . '/Integration/ProjectScanTest.php';
 
 $tests = array(
@@ -16,6 +17,7 @@ $tests = array(
     new \Malikad\Php2ShellGuard\Tests\Unit\ConfigApplierTest(),
     new \Malikad\Php2ShellGuard\Tests\Unit\ReportRenderersTest(),
     new \Malikad\Php2ShellGuard\Tests\Unit\BackportEngineTest(),
+    new \Malikad\Php2ShellGuard\Tests\Unit\SnippetRendererTest(),
     new \Malikad\Php2ShellGuard\Tests\Integration\ProjectScanTest(),
 );
 

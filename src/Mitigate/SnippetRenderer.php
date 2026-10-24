@@ -31,10 +31,9 @@ class SnippetRenderer
         }
         $text = file_get_contents($this->rootDir . '/' . $map[$target]);
         if ($includeWeak && $target === 'nginx') {
-            $text .= "
-# [N3 - Last Resort / Weak] Reject inbound Content-Encoding: br (reduces exposure only)
-if (\$http_content_encoding ~* "br") { return 415; }
-";
+            $text .= "\n" .
+                "# [N3 - Last Resort / Weak] Reject inbound Content-Encoding: br (reduces exposure only)\n" .
+                'if ($http_content_encoding ~* "br") { return 415; }' . "\n";
         }
         return $text;
     }
